@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My 7-Day Workout & Protein Planner</title>
+<title>dEAw — Workout & Protein</title>
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="dEAw">
+<meta name="theme-color" content="#0f1115">
 <style>
   :root{
     --bg:#0f1115; --card:#1a1d24; --card2:#23262f; --line:#2c303a;
@@ -118,6 +124,10 @@
         <label class="ctl">Daily protein goal (g) &nbsp;</label>
         <input id="proteinGoal" type="number" min="0" step="5" style="width:90px" onchange="setGoal(this.value)">
       </div>
+      <div>
+        <label class="ctl">Daily creatine goal (g) &nbsp;</label>
+        <input id="creatineGoal" type="number" min="0" step="0.5" style="width:80px" onchange="setCGoal(this.value)">
+      </div>
       <div class="legend">
         <span><span class="dot" style="background:var(--home)"></span> Home OK (DB + bench)</span>
         <span><span class="dot" style="background:var(--gym)"></span> Gym better</span>
@@ -166,6 +176,27 @@
       <button class="btn accent" onclick="addCustom()">Add</button>
     </div>
     <div id="pLog" class="log"></div>
+  </section>
+
+  <!-- CREATINE -->
+  <section class="panel">
+    <h2>Creatine today — <span id="cTodayLabel" style="color:var(--txt)"></span></h2>
+    <div class="prot-top">
+      <div class="ring-wrap">
+        <div class="pnum"><span id="cTaken">0</span><small>g</small></div>
+        <div class="pgoal">of goal <b id="cGoalLabel">5</b> g · <span id="cLeft">5</span> g to go</div>
+      </div>
+    </div>
+    <div class="pbar"><i id="cFill" style="background:linear-gradient(90deg,var(--accent2),var(--good))"></i></div>
+    <div class="quick">
+      <button onclick="addCreatine(2.5)">+2.5</button>
+      <button onclick="addCreatine(3)">+3</button>
+      <button onclick="addCreatine(5)">+5</button>
+      <input id="customC" type="number" min="0" step="0.5" placeholder="custom g" style="width:100px">
+      <button class="btn accent" onclick="addCustomC()">Add</button>
+    </div>
+    <div class="foot" style="text-align:left;margin-top:10px">3–5 g daily is the standard maintenance dose — timing doesn't matter, just take it consistently every day, including rest days.</div>
+    <div id="cLog" class="log"></div>
   </section>
 
   <div class="foot">Everything saves automatically on this device. Bookmark this page or add it to your phone home screen.</div>
@@ -264,7 +295,7 @@ const KEY="workoutPlannerV1";
 let S = load();
 function load(){
   try{ const d=JSON.parse(localStorage.getItem(KEY)); if(d) return d; }catch(e){}
-  return { restDay:6 /*Sunday*/, goal:150, loc:{}, done:{}, protein:{}, weekStart:weekKey() };
+  return { restDay:6 /*Sunday*/, goal:150, cgoal:5, loc:{}, done:{}, protein:{}, creatine:{}, weekStart:weekKey() };
 }
 function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
 function weekKey(){ const d=new Date(); const day=(d.getDay()+6)%7; const m=new Date(d); m.setDate(d.getDate()-day); return m.toISOString().slice(0,10); }
@@ -287,6 +318,7 @@ function renderSetup(){
   const sel=document.getElementById('restDay'); sel.innerHTML='';
   DOW.forEach((d,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=d; if(i===S.restDay)o.selected=true; sel.appendChild(o); });
   document.getElementById('proteinGoal').value=S.goal;
+  document.getElementById('creatineGoal').value=(S.cgoal!=null?S.cgoal:5);
 }
 
 function renderWeek(){
@@ -401,6 +433,45 @@ function delProtein(i){
   d.total-=d.items[i]; d.items.splice(i,1); if(d.total<0)d.total=0; save(); renderProtein();
 }
 
+/* ============ CREATINE ============ */
+function renderCreatine(){
+  if(!S.creatine) S.creatine={};
+  const tk=todayKey();
+  document.getElementById('cTodayLabel').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+  const day=S.creatine[tk]||{total:0,items:[]};
+  const goal=(S.cgoal!=null?S.cgoal:5);
+  const tot=Math.round(day.total*10)/10;
+  document.getElementById('cTaken').textContent=tot;
+  document.getElementById('cGoalLabel').textContent=goal;
+  document.getElementById('cLeft').textContent=Math.max(0,Math.round((goal-tot)*10)/10);
+  const pct=goal>0?Math.min(100,Math.round(tot/goal*100)):0;
+  document.getElementById('cFill').style.width=pct+'%';
+  const log=document.getElementById('cLog'); log.innerHTML='';
+  if(day.items.length){
+    day.items.forEach((it,i)=>{
+      const row=document.createElement('div'); row.className='item';
+      row.innerHTML=`<span>+${it} g</span><button onclick="delCreatine(${i})" title="remove">✕</button>`;
+      log.appendChild(row);
+    });
+  }else{
+    log.innerHTML='<div class="item" style="border:none">No creatine logged yet today.</div>';
+  }
+}
+function addCreatine(g){
+  if(!S.creatine) S.creatine={};
+  const tk=todayKey(); if(!S.creatine[tk])S.creatine[tk]={total:0,items:[]};
+  S.creatine[tk].total+=g; S.creatine[tk].items.push(g); save(); renderCreatine();
+}
+function addCustomC(){
+  const v=parseFloat(document.getElementById('customC').value);
+  if(v>0){ addCreatine(v); document.getElementById('customC').value=''; }
+}
+function delCreatine(i){
+  const tk=todayKey(); const d=S.creatine[tk]; if(!d)return;
+  d.total-=d.items[i]; d.items.splice(i,1); if(d.total<0)d.total=0; save(); renderCreatine();
+}
+function setCGoal(v){ S.cgoal=parseFloat(v)||0; save(); renderCreatine(); }
+
 /* ============ ACTIONS ============ */
 function setRest(v){ S.restDay=parseInt(v,10); save(); renderWeek(); }
 function setGoal(v){ S.goal=parseInt(v,10)||0; save(); renderProtein(); }
@@ -436,7 +507,7 @@ function importData(file){
 }
 
 /* ============ INIT ============ */
-function init(){ renderSetup(); renderWeek(); renderProtein(); }
+function init(){ renderSetup(); renderWeek(); renderProtein(); renderCreatine(); }
 init();
 </script>
 </body>
