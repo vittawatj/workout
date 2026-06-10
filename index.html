@@ -125,6 +125,28 @@
   details.day[open]>summary .schev{transform:rotate(180deg)}
   details.day .dbody{padding:0 15px 14px}
   .sdone{color:var(--good);font-size:12px;font-weight:700;margin-left:4px}
+  /* progress */
+  .seg{display:inline-flex;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px;margin-bottom:14px}
+  .seg button{border:none;background:transparent;color:var(--muted);padding:6px 16px;border-radius:8px;font-size:13px;font-weight:600}
+  .seg button.on{background:var(--accent);color:#fff}
+  .summary{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  @media(max-width:680px){.summary{grid-template-columns:repeat(2,1fr)}}
+  .sumtile{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+  .sumtile .n{font-size:22px;font-weight:800;line-height:1}
+  .sumtile .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:5px}
+  .streakwrap{display:flex;gap:14px;align-items:stretch;margin-top:16px;flex-wrap:wrap}
+  .streakbox{background:linear-gradient(135deg,#2a1d18,#23262f);border:1px solid var(--line);border-radius:14px;padding:14px 20px;text-align:center;display:flex;flex-direction:column;justify-content:center;min-width:110px}
+  .streakbox .snum{font-size:40px;font-weight:900;color:var(--gym);line-height:1}
+  .streakbox .slbl{font-size:11px;color:var(--muted);margin-top:4px}
+  .calwrap{flex:1;min-width:220px}
+  .callbl{font-size:12px;color:var(--muted);margin-bottom:8px}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .cal .cell{aspect-ratio:1;border-radius:5px;background:var(--card2);border:1px solid var(--line);position:relative}
+  .cal .cell.gym{background:var(--gym);border-color:var(--gym)}
+  .cal .cell.home{background:var(--good);border-color:var(--good)}
+  .cal .cell.today{outline:2px solid var(--accent2);outline-offset:1px}
+  .wtrendwrap{margin-top:18px}
+  #wtrend svg{width:100%;height:auto;display:block}
 </style>
 </head>
 <body>
@@ -148,7 +170,7 @@
       <div class="pavatar">VJ</div>
       <div>
         <div class="pname">Vittawat J.</div>
-        <div class="pmeta">Age 42 · 182 cm · Goal: build muscle</div>
+        <div class="pmeta">Age <input id="ageInput" type="number" min="10" max="100" style="width:42px;background:transparent;border:none;border-bottom:1px dashed var(--line);color:var(--muted);font:inherit;text-align:center;padding:0" onchange="setAge(this.value)"> · 182 cm · Goal: build muscle</div>
       </div>
       <div class="stats">
         <div class="stat"><div class="v"><input id="wInput" type="number" min="40" max="200" step="0.5" onchange="setWeight(this.value)"> <small>kg</small></div><div class="k">Weight</div></div>
@@ -249,6 +271,31 @@
     <div id="cLog" class="log"></div>
   </section>
 
+  <!-- PROGRESS -->
+  <section class="panel">
+    <h2>Progress</h2>
+    <div class="seg" id="periodSeg">
+      <button data-p="day" onclick="setPeriod('day')">Day</button>
+      <button data-p="week" onclick="setPeriod('week')">Week</button>
+      <button data-p="month" onclick="setPeriod('month')">Month</button>
+    </div>
+    <div class="summary" id="summaryGrid"></div>
+
+    <div class="streakwrap">
+      <div class="streakbox"><div class="snum" id="streakNum">0</div><div class="slbl">day streak 🔥</div></div>
+      <div class="calwrap">
+        <div class="callbl">Last 5 weeks <span style="float:right">🟧 gym · 🟩 home</span></div>
+        <div class="cal" id="cal"></div>
+      </div>
+    </div>
+
+    <div class="wtrendwrap">
+      <div class="callbl">Body-weight trend <span style="float:right"><span id="wtrendDelta"></span></span></div>
+      <div id="wtrend"></div>
+      <div class="foot" style="text-align:left;margin-top:6px">Update your <b>Weight</b> in the profile card above to log today's point.</div>
+    </div>
+  </section>
+
   <div class="foot">Everything saves automatically on this device. Bookmark this page or add it to your phone home screen.</div>
 </div>
 
@@ -297,10 +344,11 @@ function ex(home, gym, sr, parts, q){ return {home, gym, sr, parts, q:q||home}; 
 
 const WORKOUTS = {
   gymA: {
-    title:"Legs · Back · Shoulders A", focus:"GYM machines · leg priority", home:false, gymDay:true,
-    parts:["quads","hams","back","shoulders"],
+    title:"Legs · Back · Shoulders A", focus:"GYM · leg priority (compound first)", home:false, gymDay:true,
+    parts:["quads","hams","glutes","back","shoulders"],
     exercises:[
-      ex("DB Bulgarian Split Squat","Leg Extension — PLAMAX PL9019","4 × 12-15",["quads"],"leg extension machine"),
+      ex("DB Goblet Squat — slow 3s + pause","DB Goblet Squat — slow 3s + pause","4 × 12-15",["quads","glutes"],"goblet squat"),
+      ex("DB Bulgarian Split Squat","Leg Extension — PLAMAX PL9019","3 × 12-15",["quads"],"leg extension machine"),
       ex("DB Romanian Deadlift","Leg Curl — PLAMAX PL9019","4 × 12-15",["hams"],"leg curl machine"),
       ex("DB Pullover","Lat Pulldown — PLAMAX PL9002","4 × 8-12",["back"],"lat pulldown"),
       ex("One-Arm DB Row","Seated Row — PLAMAX PL9002","3 × 10-12",["back","traps"],"seated row machine"),
@@ -308,14 +356,15 @@ const WORKOUTS = {
     ]
   },
   gymB: {
-    title:"Legs · Back · Shoulders B", focus:"GYM machines · back/shoulder priority", home:false, gymDay:true,
-    parts:["back","shoulders","quads","hams"],
+    title:"Legs · Back · Shoulders B", focus:"GYM · back/shoulder priority (compound first)", home:false, gymDay:true,
+    parts:["quads","hams","glutes","back","shoulders"],
     exercises:[
+      ex("DB Bulgarian Split Squat — slow + pause","DB Bulgarian Split Squat — slow + pause","4 × 10-12 each",["quads","glutes"],"bulgarian split squat"),
+      ex("DB Romanian Deadlift","Leg Curl — PLAMAX PL9019","4 × 12-15",["hams"],"leg curl machine"),
       ex("DB Pullover","Lat Pulldown — PLAMAX PL9002","4 × 8-12",["back"],"lat pulldown"),
       ex("Chest-Supported DB Row","Seated Row — PLAMAX PL9002","4 × 10-12",["back","traps"],"seated row machine"),
       ex("Seated DB Shoulder Press","Shoulder Press — Multi Press PL9021","4 × 8-12",["shoulders"],"machine shoulder press"),
-      ex("DB Bulgarian Split Squat","Leg Extension — PLAMAX PL9019","3 × 12-15",["quads"],"leg extension machine"),
-      ex("DB Romanian Deadlift","Leg Curl — PLAMAX PL9019","3 × 12-15",["hams"],"leg curl machine")
+      ex("DB Goblet Squat","Leg Extension — PLAMAX PL9019","3 × 12-15",["quads"],"leg extension machine")
     ]
   },
   chestTri: {
@@ -373,11 +422,16 @@ const KEY="workoutPlannerV1";
 let S = load();
 function load(){
   try{ const d=JSON.parse(localStorage.getItem(KEY)); if(d) return d; }catch(e){}
-  return { restDay:6 /*Sunday*/, goal:150, cgoal:5, height:182, weight:77, wgoal:80, loc:{}, done:{}, protein:{}, creatine:{}, weekStart:weekKey() };
+  return { restDay:6 /*Sunday*/, goal:150, cgoal:5, age:42, height:182, weight:77, wgoal:80,
+           loc:{}, history:{}, weights:[], protein:{}, creatine:{}, period:'week' };
 }
 function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
-function weekKey(){ const d=new Date(); const day=(d.getDay()+6)%7; const m=new Date(d); m.setDate(d.getDate()-day); return m.toISOString().slice(0,10); }
-function todayKey(){ return new Date().toISOString().slice(0,10); }
+// local-date helpers (avoid UTC offset bugs)
+function iso(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function addDays(d,n){ const x=new Date(d); x.setDate(d.getDate()+n); return x; }
+function curMonday(){ const d=new Date(); const wd=(d.getDay()+6)%7; const m=addDays(d,-wd); m.setHours(0,0,0,0); return m; }
+function dateStrOf(dayIdx){ return iso(addDays(curMonday(), dayIdx)); }   // date of weekday in current week
+function todayKey(){ return iso(new Date()); }
 function todayDow(){ return (new Date().getDay()+6)%7; } // 0=Mon
 
 /* build schedule: map each weekday(0-6) -> workout key or 'rest' */
@@ -395,6 +449,7 @@ function schedule(){
 function renderProfile(){
   const h=(S.height||182)/100, w=S.weight||77, goal=S.wgoal||80;
   document.getElementById('wInput').value=w;
+  document.getElementById('ageInput').value=(S.age!=null?S.age:42);
   document.getElementById('goalVal').innerHTML=goal+'<small>kg</small>';
   const bmi=w/(h*h);
   let cat='', col='var(--good)';
@@ -416,7 +471,17 @@ function renderProfile(){
   const pct=Math.max(0,Math.min(100,(w-lo)/(hi-lo)*100));
   document.getElementById('goalFill').style.width=pct+'%';
 }
-function setWeight(v){ S.weight=parseFloat(v)||S.weight; save(); renderProfile(); }
+function setWeight(v){
+  const kg=parseFloat(v); if(!kg) return;
+  S.weight=kg;
+  // upsert today's weight log point
+  if(!S.weights) S.weights=[];
+  const tk=todayKey(); const e=S.weights.find(x=>x.d===tk);
+  if(e) e.kg=kg; else S.weights.push({d:tk, kg});
+  S.weights.sort((a,b)=>a.d<b.d?-1:1);
+  save(); renderProfile(); renderProgress();
+}
+function setAge(v){ S.age=parseInt(v,10)||S.age; save(); }
 
 /* ============ RENDER ============ */
 function renderSetup(){
@@ -435,7 +500,7 @@ function renderWeek(){
     const det=document.createElement('details');
     det.className='day'+(isToday?' today':'')+(key==='rest'?' restday':'');
     if(isToday) det.open=true;
-    const did=d+'_'+S.weekStart;
+    const did=dateStrOf(d);
     if(key==='rest'){
       det.innerHTML=`<summary>
           <div class="sday">${DOW[d]}${isToday?' · Today':''}</div>
@@ -448,7 +513,7 @@ function renderWeek(){
     const w=WORKOUTS[key];
     const loc = S.loc[did] || (w.home?'home':'gym');
     const pill = w.home?'<span class="pill home">Home</span>':'<span class="pill gym">Gym</span>';
-    const doneFlag = S.done[did] ? '<span class="sdone">✓ done</span>' : '';
+    const doneFlag = S.history[did] ? '<span class="sdone">✓ done</span>' : '';
     let exHTML='';
     w.exercises.forEach((e)=>{
       const showGym = loc==='gym';
@@ -463,7 +528,7 @@ function renderWeek(){
         <a class="yt" href="${yt(showGym? (e.gym):(e.home))}" target="_blank">▶ video</a>
       </div>`;
     });
-    const doneChecked = S.done[did] ? 'checked':'';
+    const doneChecked = S.history[did] ? 'checked':'';
     det.innerHTML=`
       <summary>
         <div class="sday">${DOW[d]}${isToday?' · Today':''}</div>
@@ -491,9 +556,9 @@ function renderGymStatus(){
   for(let d=0; d<7; d++){
     const w=WORKOUTS[map[d]];
     if(w && w.gymDay){
-      const did=d+'_'+S.weekStart;
-      const loc = S.loc[did] || 'gym';
-      if(S.done[did] && loc==='gym') gymDone++;
+      const did=dateStrOf(d);
+      const h=S.history[did];
+      if(h && (h.loc||'gym')==='gym') gymDone++;
     }
   }
   setDot('dotG1', gymDone>=1); setTx('txtG1', gymDone>=1?'✓ done':'· to do');
@@ -588,14 +653,97 @@ function delCreatine(i){
 }
 function setCGoal(v){ S.cgoal=parseFloat(v)||0; save(); renderCreatine(); }
 
+/* ============ PROGRESS ============ */
+function setPeriod(p){ S.period=p; save(); renderProgress(); }
+function renderProgress(){
+  if(!S.history)S.history={}; if(!S.weights)S.weights=[];
+  const period=S.period||'week';
+  // segmented active state
+  document.querySelectorAll('#periodSeg button').forEach(b=>{ b.className = b.dataset.p===period?'on':''; });
+  // build date range
+  const today=new Date(); const n = period==='day'?1 : period==='week'?7 : 30;
+  const dates=[]; for(let i=n-1;i>=0;i--) dates.push(iso(addDays(today,-i)));
+  const goal=S.goal||0, cgoal=(S.cgoal!=null?S.cgoal:5);
+  let workouts=0, gymVisits=0, creatineDays=0; const pPct=[];
+  dates.forEach(ds=>{
+    const h=S.history[ds];
+    if(h){ workouts++; if(WORKOUTS[h.key] && WORKOUTS[h.key].gymDay && (h.loc||'gym')==='gym') gymVisits++; }
+    const p=S.protein[ds]; if(p && goal>0) pPct.push(Math.min(100, p.total/goal*100));
+    const c=S.creatine[ds]; if(c && c.total>=cgoal && cgoal>0) creatineDays++;
+  });
+  const avgP = pPct.length ? Math.round(pPct.reduce((a,b)=>a+b,0)/pPct.length) : null;
+  // weight change in range
+  const wr=S.weights.filter(w=>dates.indexOf(w.d)>=0);
+  const wChange = wr.length>=2 ? (wr[wr.length-1].kg - wr[0].kg) : null;
+  const tiles=[
+    {n:workouts, l:'Workouts'},
+    {n:gymVisits, l:'Gym visits'},
+    {n: avgP==null?'–':avgP+'%', l:'Avg protein'},
+    {n:creatineDays, l:'Creatine days'},
+    {n: wChange==null?'–':(wChange>0?'+':'')+wChange.toFixed(1)+'kg', l:'Weight Δ'}
+  ];
+  document.getElementById('summaryGrid').innerHTML = tiles.map(t=>
+    `<div class="sumtile"><div class="n">${t.n}</div><div class="l">${t.l}</div></div>`).join('');
+
+  // streak: consecutive days with a logged workout, ending today (or yesterday if today not done yet)
+  let streak=0, i=0; if(!S.history[iso(today)]) i=1;
+  for(;;i++){ if(S.history[iso(addDays(today,-i))]) streak++; else break; }
+  document.getElementById('streakNum').textContent=streak;
+
+  // calendar: last 5 weeks, Mon-Sun
+  const startMon=addDays(curMonday(),-28); let cal='';
+  for(let k=0;k<35;k++){ const dt=addDays(startMon,k); const ds=iso(dt); const h=S.history[ds];
+    const cls = h? ((h.loc||'gym')==='gym'?'gym':'home') : '';
+    const tdy = ds===iso(today)?' today':'';
+    cal+=`<div class="cell ${cls}${tdy}" title="${ds}"></div>`;
+  }
+  document.getElementById('cal').innerHTML=cal;
+
+  renderWeightChart();
+}
+function renderWeightChart(){
+  const box=document.getElementById('wtrend'); const dEl=document.getElementById('wtrendDelta');
+  const pts=(S.weights||[]).slice(-14);
+  if(pts.length<2){ box.innerHTML='<div class="foot" style="text-align:left">Log at least 2 days of weight to see your trend.</div>'; dEl.textContent=''; return; }
+  const kgs=pts.map(p=>p.kg); const min=Math.min(...kgs), max=Math.max(...kgs);
+  const pad=(max-min)<1?1:(max-min)*0.2; const lo=min-pad, hi=max+pad;
+  const W=320,H=90,L=8,R=8,T=10,B=16;
+  const x=i=> L + (pts.length<2?0:i*(W-L-R)/(pts.length-1));
+  const y=kg=> T + (H-T-B) * (1-(kg-lo)/(hi-lo));
+  const line=pts.map((p,i)=>`${x(i).toFixed(1)},${y(p.kg).toFixed(1)}`).join(' ');
+  const dots=pts.map((p,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(p.kg).toFixed(1)}" r="2.4" fill="var(--accent2)"/>`).join('');
+  const goal=S.wgoal||80; let goalLine='';
+  if(goal>=lo&&goal<=hi){ const gy=y(goal).toFixed(1); goalLine=`<line x1="${L}" y1="${gy}" x2="${W-R}" y2="${gy}" stroke="var(--good)" stroke-dasharray="3 3" stroke-width="1"/><text x="${W-R}" y="${(gy-3)}" fill="var(--good)" font-size="8" text-anchor="end">goal ${goal}</text>`; }
+  box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    ${goalLine}
+    <polyline points="${line}" fill="none" stroke="var(--accent2)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+    <text x="${L}" y="${H-3}" fill="#888" font-size="8">${pts[0].d.slice(5)}</text>
+    <text x="${W-R}" y="${H-3}" fill="#888" font-size="8" text-anchor="end">${pts[pts.length-1].d.slice(5)}</text>
+  </svg>`;
+  const delta=pts[pts.length-1].kg-pts[0].kg;
+  dEl.innerHTML = (delta>0?'+':'')+delta.toFixed(1)+' kg over '+pts.length+' logs';
+  dEl.style.color = Math.abs(delta)<0.1?'var(--muted)':(delta>0?'var(--gym)':'var(--good)');
+}
+
 /* ============ ACTIONS ============ */
 function setRest(v){ S.restDay=parseInt(v,10); save(); renderWeek(); }
 function setGoal(v){ S.goal=parseInt(v,10)||0; save(); renderProtein(); }
-function setLoc(d,loc){ S.loc[d+'_'+S.weekStart]=loc; save(); renderWeek(); }
-function toggleDone(d,c){ S.done[d+'_'+S.weekStart]=c; save(); renderWeek(); }
+function setLoc(d,loc){
+  const ds=dateStrOf(d); S.loc[ds]=loc;
+  if(S.history[ds]) S.history[ds].loc=loc;
+  save(); renderWeek();
+}
+function toggleDone(d,c){
+  const ds=dateStrOf(d); const map=schedule();
+  if(c){ S.history[ds]={key:map[d], loc:(S.loc[ds]|| (WORKOUTS[map[d]] && WORKOUTS[map[d]].home?'home':'gym'))}; }
+  else { delete S.history[ds]; }
+  save(); renderWeek(); renderProgress();
+}
 function newWeek(){
-  if(!confirm('Start a fresh week? This clears workout completion + location choices (protein history is kept).'))return;
-  S.weekStart=weekKey(); S.loc={}; S.done={}; save(); renderWeek();
+  if(!confirm('Clear THIS week\'s checkmarks & location choices? Your progress history and trackers are kept.'))return;
+  for(let d=0; d<7; d++){ const ds=dateStrOf(d); delete S.loc[ds]; delete S.history[ds]; }
+  save(); renderWeek(); renderProgress();
 }
 function resetAll(){
   if(!confirm('Reset EVERYTHING including protein history?'))return;
@@ -623,7 +771,16 @@ function importData(file){
 }
 
 /* ============ INIT ============ */
-function init(){ renderProfile(); renderSetup(); renderWeek(); renderProtein(); renderCreatine(); }
+function normalize(){
+  if(!S.history)S.history={}; if(!S.weights)S.weights=[]; if(!S.loc)S.loc={};
+  if(!S.protein)S.protein={}; if(!S.creatine)S.creatine={};
+  if(S.age==null)S.age=42; if(S.height==null)S.height=182; if(S.weight==null)S.weight=77;
+  if(S.wgoal==null)S.wgoal=80; if(!S.period)S.period='week';
+  if(S.goal==null)S.goal=150; if(S.cgoal==null)S.cgoal=5; if(S.restDay==null)S.restDay=6;
+  // seed first weight point so the trend has a starting reference
+  if(S.weights.length===0 && S.weight) S.weights.push({d:todayKey(), kg:S.weight});
+}
+function init(){ normalize(); renderProfile(); renderSetup(); renderWeek(); renderProtein(); renderCreatine(); renderProgress(); }
 init();
 </script>
 </body>
