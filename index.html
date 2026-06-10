@@ -147,6 +147,10 @@
   .cal .cell.today{outline:2px solid var(--accent2);outline-offset:1px}
   .wtrendwrap{margin-top:18px}
   #wtrend svg{width:100%;height:auto;display:block}
+  .trainbtn{display:block;width:100%;margin-top:14px;padding:14px;border-radius:12px;background:var(--accent);color:#fff;border:none;font-size:15px;font-weight:800;letter-spacing:.3px}
+  .trainbtn.done{background:var(--card2);color:var(--good);border:1px solid var(--good);font-weight:700}
+  .gymwarn{font-size:12.5px;color:var(--gym);margin:4px 0 10px;padding:9px 11px;background:rgba(255,159,28,.12);border:1px solid rgba(255,159,28,.35);border-radius:10px;line-height:1.45}
+  .stat .v input{border-bottom:1px solid var(--accent2)}
 </style>
 </head>
 <body>
@@ -173,7 +177,7 @@
         <div class="pmeta">Age <input id="ageInput" type="number" min="10" max="100" style="width:42px;background:transparent;border:none;border-bottom:1px dashed var(--line);color:var(--muted);font:inherit;text-align:center;padding:0" onchange="setAge(this.value)"> · 182 cm · Goal: build muscle</div>
       </div>
       <div class="stats">
-        <div class="stat"><div class="v"><input id="wInput" type="number" min="40" max="200" step="0.5" onchange="setWeight(this.value)"> <small>kg</small></div><div class="k">Weight</div></div>
+        <div class="stat"><div class="v"><input id="wInput" type="number" inputmode="decimal" min="40" max="200" step="0.5" onchange="setWeight(this.value)" onblur="setWeight(this.value)"> <small>kg</small></div><div class="k">Weight ✎</div></div>
         <div class="stat"><div class="v" id="bmiVal">–</div><div class="k" id="bmiCat">BMI</div></div>
         <div class="stat"><div class="v" id="goalVal">80<small>kg</small></div><div class="k">Lean goal</div></div>
       </div>
@@ -410,12 +414,31 @@ const WORKOUTS = {
       ex("Overhead DB Triceps Extension","Cable Overhead Extension","3 × 10-12",["triceps"]),
       ex("DB Hammer Curl","Rope Hammer Curl","3 × 12",["biceps"])
     ]
+  },
+  bicepsArms: {
+    title:"Biceps & Delts", focus:"Home · biceps + side/rear delts", home:true,
+    parts:["biceps","shoulders"],
+    exercises:[
+      ex("DB Biceps Curl","EZ-Bar / Cable Curl","4 × 10-12",["biceps"]),
+      ex("DB Hammer Curl","Rope Hammer Curl","3 × 10-12",["biceps"]),
+      ex("DB Incline Curl (on bench)","Cable Curl","3 × 10-12",["biceps"]),
+      ex("DB Lateral Raise","Cable Lateral Raise","4 × 12-20",["shoulders"]),
+      ex("DB Rear-Delt Fly (on bench)","Reverse Pec Deck","3 × 15-20",["shoulders"])
+    ]
   }
 };
 
-// 6-session order: 2 gym Legs+Back days spaced apart, 4 home days
-const SEQUENCE = ["gymA","chestTri","shBi","gymB","chestBack","armsSh"];
 const DOW = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+// session "type" → workout key. gym alternates A/B for variety.
+const HOME_KEY = {chest:'chestTri', biceps:'bicepsArms'};
+function typeOfKey(k){
+  if(!k) return null;
+  if(k==='gymA'||k==='gymB') return 'gym';
+  if(k==='chestTri') return 'chest';
+  if(k==='bicepsArms') return 'biceps';
+  return (WORKOUTS[k] && WORKOUTS[k].gymDay) ? 'gym' : 'home';
+}
+function typeLabel(t){ return t==='gym'?'Legs · Back · Shoulders (Gym)' : t==='chest'?'Chest & Triceps' : 'Biceps & Delts'; }
 
 /* ============ STATE / STORAGE ============ */
 const KEY="workoutPlannerV1";
@@ -435,14 +458,72 @@ function todayKey(){ return iso(new Date()); }
 function todayDow(){ return (new Date().getDay()+6)%7; } // 0=Mon
 
 /* build schedule: map each weekday(0-6) -> workout key or 'rest' */
-function schedule(){
-  const map={}; map[S.restDay]='rest';
-  let i=0;
-  for(let d=0; d<7; d++){
-    if(d===S.restDay) continue;
-    map[d]=SEQUENCE[i]; i++;
-  }
-  return map;
+/* Adaptive weekly planner.
+   Rules: 2 gym/week max · gym never on consecutive days · never the same
+   session type two days running (muscle recovery) · re-plans around whatever
+   you've actually logged this week. */
+function buildPlan(){
+  const rest=S.restDay;
+  const days=[]; for(let d=0; d<7; d++) if(d!==rest) days.push(d);
+  const comp={};                              // completed days this week -> {type,key}
+  days.forEach(d=>{ const h=S.history[dateStrOf(d)]; if(h) comp[d]={type:typeOfKey(h.key), key:h.key}; });
+  const target={gym:2, chest:2, biceps:2};    // weekly goal
+  days.forEach(d=>{ if(comp[d] && target[comp[d].type]!=null) target[comp[d].type]--; });
+  Object.keys(target).forEach(k=>{ if(target[k]<0) target[k]=0; });
+  let gymCount=0; days.forEach(d=>{ if(comp[d] && comp[d].type==='gym') gymCount++; });
+  const rank={gym:0,chest:1,biceps:2};
+  const typeMap={};
+  days.forEach(d=>{
+    if(comp[d]){ typeMap[d]=comp[d].type; return; }
+    const pd=(d-1+7)%7;
+    const prev=(pd===rest)?null:(typeMap[pd] || (comp[pd]&&comp[pd].type) || null);
+    let cands=['gym','chest','biceps'].filter(t=>target[t]>0);
+    if(cands.length===0) cands=['chest','biceps'];          // bonus home days once targets met
+    cands=cands.filter(t=>{
+      if(t===prev) return false;                            // no same type 2 days running
+      if(t==='gym' && (prev==='gym' || gymCount>=2)) return false; // gym ≤2/wk, not consecutive
+      return true;
+    });
+    if(cands.length===0){
+      cands=['chest','biceps','gym'].filter(t=> t!==prev && !(t==='gym'&&(prev==='gym'||gymCount>=2)));
+      if(cands.length===0) cands=[ prev==='chest'?'biceps':'chest' ];
+    }
+    cands.sort((a,b)=> ((target[b]||0)-(target[a]||0)) || (rank[a]-rank[b]));
+    const pick=cands[0];
+    typeMap[d]=pick;
+    if(target[pick]!=null && target[pick]>0) target[pick]--;
+    if(pick==='gym') gymCount++;
+  });
+  // map types → keys (alternate gym A/B in day order; keep logged keys as-is)
+  const map={}; map[rest]='rest'; let gymSeen=0;
+  days.forEach(d=>{
+    if(comp[d]){ map[d]=comp[d].key; if(comp[d].type==='gym') gymSeen++; return; }
+    const t=typeMap[d];
+    if(t==='gym'){ map[d]=(gymSeen%2===0)?'gymA':'gymB'; gymSeen++; }
+    else map[d]=HOME_KEY[t]||'chestTri';
+  });
+  return {map, typeMap, target};
+}
+function schedule(){ return buildPlan().map; }
+function bestHomeType(){ const t=buildPlan().target; return (t.biceps||0)>(t.chest||0)?'biceps':'chest'; }
+function gymVariantThisWeek(){ const rest=S.restDay; let n=0;
+  for(let d=0;d<7;d++){ if(d===rest)continue; const h=S.history[dateStrOf(d)]; if(h&&typeOfKey(h.key)==='gym') n++; }
+  return n%2===0?'gymA':'gymB'; }
+function gymsThisWeek(){ const rest=S.restDay; let n=0;
+  for(let d=0;d<7;d++){ if(d===rest)continue; const h=S.history[dateStrOf(d)]; if(h&&typeOfKey(h.key)==='gym') n++; }
+  return n; }
+// what TODAY should show, honoring the user's Home/Gym choice
+function todayPick(){
+  const today=todayDow(); const ds=dateStrOf(today);
+  if(today===S.restDay) return {rest:true};
+  const logged=S.history[ds];
+  if(logged) return {key:logged.key, loc:logged.loc, logged:true};
+  const plan=buildPlan(); const planType=plan.typeMap[today];
+  const loc=S.loc[ds] || (planType==='gym'?'gym':'home');
+  let key;
+  if(loc==='gym') key=gymVariantThisWeek();
+  else key = (planType==='gym') ? HOME_KEY[bestHomeType()] : (HOME_KEY[planType]||'chestTri');
+  return {key, loc, logged:false};
 }
 
 /* ============ PROFILE ============ */
@@ -491,58 +572,89 @@ function renderSetup(){
   document.getElementById('creatineGoal').value=(S.cgoal!=null?S.cgoal:5);
 }
 
+function exListHTML(key, loc){
+  const w=WORKOUTS[key]; let html='';
+  w.exercises.forEach((e)=>{
+    const showGym = loc==='gym';
+    const nm = showGym? e.gym : e.home;
+    html+=`<div class="ex">
+      <div class="thumb">${bodySVG(e.parts)}</div>
+      <div class="info"><div class="nm">${nm}</div><div class="sr">${e.sr}</div></div>
+      <a class="yt" href="${yt(showGym? e.gym : e.home)}" target="_blank">▶ video</a>
+    </div>`;
+  });
+  return html;
+}
 function renderWeek(){
-  const map=schedule(); const wk=document.getElementById('week'); wk.innerHTML='';
+  const plan=buildPlan(); const map=plan.map; const wk=document.getElementById('week'); wk.innerHTML='';
   const td=todayDow();
   for(let d=0; d<7; d++){
     const key=map[d];
     const isToday=d===td;
+    const did=dateStrOf(d);
     const det=document.createElement('details');
     det.className='day'+(isToday?' today':'')+(key==='rest'?' restday':'');
     if(isToday) det.open=true;
-    const did=dateStrOf(d);
+
     if(key==='rest'){
       det.innerHTML=`<summary>
           <div class="sday">${DOW[d]}${isToday?' · Today':''}</div>
           <div class="stitle">Rest &amp; Recover <span class="pill rest">Rest</span></div>
-          <div class="schev">▾</div>
-        </summary>
+          <div class="schev">▾</div></summary>
         <div class="dbody"><div class="focus">Sleep, walk, light stretch, and still hit your protein + creatine goals.</div></div>`;
       wk.appendChild(det); continue;
     }
+
+    if(isToday){
+      // interactive Today card
+      const p=todayPick();
+      const w=WORKOUTS[p.key];
+      const pill = (typeOfKey(p.key)==='gym') ? '<span class="pill gym">Gym</span>' : '<span class="pill home">Home</span>';
+      const doneFlag = p.logged ? '<span class="sdone">✓ trained</span>' : '';
+      // gym advisory
+      let warn='';
+      if(!p.logged && p.loc==='gym'){
+        const yda=(d-1+7)%7; const ydH = (yda!==S.restDay) && S.history[dateStrOf(yda)] && typeOfKey(S.history[dateStrOf(yda)].key)==='gym';
+        if(gymsThisWeek()>=2) warn='<div class="gymwarn">You\'ve already done 2 gym days this week — a home day is better for recovery, but your call.</div>';
+        else if(ydH) warn='<div class="gymwarn">You trained the gym yesterday — give legs/back/shoulders a rest day. A home session is recommended.</div>';
+      }
+      const btn = p.logged
+        ? `<button class="trainbtn done" onclick="undoToday()">✓ Trained today — tap to undo</button>`
+        : `<button class="trainbtn" onclick="trainToday()">✓ I trained today</button>`;
+      det.innerHTML=`
+        <summary>
+          <div class="sday">${DOW[d]} · Today</div>
+          <div class="stitle">${w.title} ${pill}${doneFlag}</div>
+          <div class="schev">▾</div></summary>
+        <div class="dbody">
+          <div class="focus" style="margin-bottom:8px">Where are you today?</div>
+          <div class="loc-toggle">
+            <button class="${p.loc==='home'?'on home':''}" onclick="setTodayLoc('home')">🏠 Home</button>
+            <button class="${p.loc==='gym'?'on gym':''}" onclick="setTodayLoc('gym')">🏋️ Gym</button>
+          </div>
+          ${warn}
+          ${exListHTML(p.key, p.loc)}
+          ${btn}
+        </div>`;
+      wk.appendChild(det); continue;
+    }
+
+    // forecast day (flexible)
     const w=WORKOUTS[key];
-    const loc = S.loc[did] || (w.home?'home':'gym');
-    const pill = w.home?'<span class="pill home">Home</span>':'<span class="pill gym">Gym</span>';
-    const doneFlag = S.history[did] ? '<span class="sdone">✓ done</span>' : '';
-    let exHTML='';
-    w.exercises.forEach((e)=>{
-      const showGym = loc==='gym';
-      const nm = showGym? e.gym : e.home;
-      const tag = (!w.home && loc==='home') ? '<span class="gymtag"> (home version)</span>' : '';
-      exHTML+=`<div class="ex">
-        <div class="thumb">${bodySVG(e.parts)}</div>
-        <div class="info">
-          <div class="nm">${nm}${tag}</div>
-          <div class="sr">${e.sr}</div>
-        </div>
-        <a class="yt" href="${yt(showGym? (e.gym):(e.home))}" target="_blank">▶ video</a>
-      </div>`;
-    });
-    const doneChecked = S.history[did] ? 'checked':'';
+    const isGym = typeOfKey(key)==='gym';
+    const loc = isGym?'gym':'home';
+    const pill = isGym?'<span class="pill gym">Gym</span>':'<span class="pill home">Home</span>';
+    const done = !!S.history[did];
+    const doneFlag = done ? '<span class="sdone">✓ done</span>' : '';
     det.innerHTML=`
       <summary>
-        <div class="sday">${DOW[d]}${isToday?' · Today':''}</div>
+        <div class="sday">${DOW[d]}</div>
         <div class="stitle">${w.title} ${pill}${doneFlag}</div>
-        <div class="schev">▾</div>
-      </summary>
+        <div class="schev">▾</div></summary>
       <div class="dbody">
-        <div class="focus" style="margin-bottom:8px">${w.focus}</div>
-        <div class="loc-toggle">
-          <button class="${loc==='home'?'on home':''}" onclick="setLoc(${d},'home')">🏠 Home</button>
-          <button class="${loc==='gym'?'on gym':''}" onclick="setLoc(${d},'gym')">🏋️ Gym</button>
-        </div>
-        ${exHTML}
-        <label class="done-row"><input type="checkbox" ${doneChecked} onchange="toggleDone(${d},this.checked)"> Mark done ${loc==='gym'?'(at gym)':'(at home)'}</label>
+        <div class="focus" style="margin-bottom:8px">${w.focus} · <span style="opacity:.7">flexible — adapts to what you actually train</span></div>
+        ${exListHTML(key, loc)}
+        <label class="done-row"><input type="checkbox" ${done?'checked':''} onchange="toggleDone(${d},this.checked)"> Mark done</label>
       </div>`;
     wk.appendChild(det);
   }
@@ -729,14 +841,17 @@ function renderWeightChart(){
 /* ============ ACTIONS ============ */
 function setRest(v){ S.restDay=parseInt(v,10); save(); renderWeek(); }
 function setGoal(v){ S.goal=parseInt(v,10)||0; save(); renderProtein(); }
-function setLoc(d,loc){
-  const ds=dateStrOf(d); S.loc[ds]=loc;
-  if(S.history[ds]) S.history[ds].loc=loc;
-  save(); renderWeek();
+function setTodayLoc(loc){ const ds=dateStrOf(todayDow()); S.loc[ds]=loc; save(); renderWeek(); }
+function trainToday(){
+  const ds=dateStrOf(todayDow()); const p=todayPick();
+  if(p.rest||p.logged) return;
+  S.history[ds]={key:p.key, loc:p.loc};
+  save(); renderWeek(); renderProgress();
 }
+function undoToday(){ const ds=dateStrOf(todayDow()); delete S.history[ds]; save(); renderWeek(); renderProgress(); }
 function toggleDone(d,c){
-  const ds=dateStrOf(d); const map=schedule();
-  if(c){ S.history[ds]={key:map[d], loc:(S.loc[ds]|| (WORKOUTS[map[d]] && WORKOUTS[map[d]].home?'home':'gym'))}; }
+  const ds=dateStrOf(d); const map=buildPlan().map;
+  if(c){ const key=map[d]; S.history[ds]={key, loc:(typeOfKey(key)==='gym'?'gym':'home')}; }
   else { delete S.history[ds]; }
   save(); renderWeek(); renderProgress();
 }
