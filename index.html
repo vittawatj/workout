@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My 7-Day Workout & Protein Planner</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#1a1d24; --card2:#23262f; --line:#2c303a;
+    --txt:#e8eaed; --muted:#9aa0aa; --accent:#ff5a4d; --accent2:#4dabff;
+    --home:#37c871; --gym:#ff9f1c; --rest:#7a7f8a; --good:#37c871;
+    --radius:16px; --shadow:0 6px 20px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;padding-bottom:60px}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px}
+  header.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+  h1{font-size:22px;margin:0;letter-spacing:.2px}
+  h1 span{color:var(--accent)}
+  .sub{color:var(--muted);font-size:13px;margin:2px 0 16px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:18px;box-shadow:var(--shadow)}
+  .panel h2{font-size:15px;margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+  /* controls */
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  label.ctl{font-size:13px;color:var(--muted)}
+  select,input[type=number],input[type=text]{background:var(--card2);color:var(--txt);border:1px solid var(--line);
+    border-radius:10px;padding:8px 10px;font-size:14px;outline:none}
+  select:focus,input:focus{border-color:var(--accent2)}
+  button{cursor:pointer;font-family:inherit}
+  .btn{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px}
+  .btn:hover{border-color:var(--accent2)}
+  .btn.accent{background:var(--accent);border-color:var(--accent);color:#fff}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px}
+  .pill.home{background:rgba(55,200,113,.15);color:var(--home)}
+  .pill.gym{background:rgba(255,159,28,.15);color:var(--gym)}
+  .pill.rest{background:rgba(122,127,138,.18);color:var(--rest)}
+  /* gym status banner */
+  .status{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+  .status .chip{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--line);
+    border-radius:12px;padding:10px 14px;font-size:14px;font-weight:600}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .dot.ok{background:var(--good)} .dot.no{background:var(--gym)}
+  .banner{margin-top:12px;padding:12px 14px;border-radius:12px;font-size:14px;line-height:1.5}
+  .banner.ok{background:rgba(55,200,113,.12);border:1px solid rgba(55,200,113,.4)}
+  .banner.warn{background:rgba(255,159,28,.12);border:1px solid rgba(255,159,28,.4)}
+  /* week grid */
+  .week{display:grid;grid-template-columns:repeat(7,1fr);gap:12px}
+  @media(max-width:980px){.week{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.week{grid-template-columns:1fr}}
+  .day{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+  .day.today{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,90,77,.25)}
+  .day.restday{opacity:.78}
+  .day .dhead{padding:12px 12px 8px}
+  .day .dow{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center}
+  .day .dtitle{font-size:15px;font-weight:700;margin-top:4px}
+  .day .focus{font-size:12px;color:var(--muted);margin-top:2px}
+  .day .dbody{padding:0 12px 12px;flex:1}
+  .loc-toggle{display:flex;gap:6px;margin:10px 0}
+  .loc-toggle button{flex:1;padding:6px;font-size:12px;border-radius:8px;border:1px solid var(--line);background:var(--card2);color:var(--muted)}
+  .loc-toggle button.on.home{background:var(--home);border-color:var(--home);color:#06210f}
+  .loc-toggle button.on.gym{background:var(--gym);border-color:var(--gym);color:#3a2400}
+  .ex{display:flex;gap:8px;padding:8px 0;border-top:1px solid var(--line);align-items:center}
+  .ex:first-of-type{border-top:none}
+  .ex .thumb{flex:0 0 auto}
+  .ex .info{flex:1;min-width:0}
+  .ex .nm{font-size:13px;font-weight:600;line-height:1.25}
+  .ex .sr{font-size:11px;color:var(--muted);margin-top:2px}
+  .ex a.yt{font-size:11px;color:var(--accent2);text-decoration:none;white-space:nowrap}
+  .ex a.yt:hover{text-decoration:underline}
+  .gymtag{font-size:10px;color:var(--gym);font-weight:700}
+  .done-row{margin-top:10px;display:flex;align-items:center;gap:8px;font-size:13px}
+  .done-row input{width:16px;height:16px;accent-color:var(--accent)}
+  /* protein */
+  .prot-top{display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between}
+  .ring-wrap{display:flex;align-items:center;gap:16px}
+  .pnum{font-size:30px;font-weight:800}
+  .pnum small{font-size:14px;color:var(--muted);font-weight:500}
+  .pgoal{font-size:13px;color:var(--muted)}
+  .pbar{height:14px;background:var(--card2);border-radius:999px;overflow:hidden;margin-top:10px;border:1px solid var(--line)}
+  .pbar > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--good));width:0;transition:width .35s}
+  .quick{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .quick button{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px;font-weight:600;color:var(--txt)}
+  .quick button:hover{border-color:var(--good)}
+  .log{margin-top:14px}
+  .log .item{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:7px 0;border-top:1px solid var(--line);color:var(--muted)}
+  .log .item button{background:none;border:none;color:var(--accent);font-size:16px;line-height:1}
+  .foot{color:var(--muted);font-size:12px;text-align:center;margin-top:8px}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>My 7-Day <span>Workout</span> Planner</h1>
+      <div class="sub">Dumbbell + Bench at home · Full gym in the village · Build-muscle plan</div>
+    </div>
+    <div class="row" style="gap:8px">
+      <button class="btn" onclick="exportData()">⬇ Backup</button>
+      <button class="btn" onclick="document.getElementById('importFile').click()">⬆ Restore</button>
+      <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(this.files[0])">
+      <button class="btn" onclick="resetAll()">Reset</button>
+    </div>
+  </header>
+
+  <!-- SETTINGS -->
+  <section class="panel">
+    <h2>Setup</h2>
+    <div class="row" style="gap:18px">
+      <div>
+        <label class="ctl">Rest day &nbsp;</label>
+        <select id="restDay" onchange="setRest(this.value)"></select>
+      </div>
+      <div>
+        <label class="ctl">Daily protein goal (g) &nbsp;</label>
+        <input id="proteinGoal" type="number" min="0" step="5" style="width:90px" onchange="setGoal(this.value)">
+      </div>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--home)"></span> Home OK (DB + bench)</span>
+        <span><span class="dot" style="background:var(--gym)"></span> Gym better</span>
+        <span><span class="dot" style="background:var(--rest)"></span> Rest</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- GYM STATUS -->
+  <section class="panel">
+    <h2>Do I need the gym this week?</h2>
+    <div class="status">
+      <div class="chip"><span id="dotLegs" class="dot no"></span> Legs <span id="txtLegs" style="color:var(--muted);font-weight:500"></span></div>
+      <div class="chip"><span id="dotSh" class="dot no"></span> Shoulders <span id="txtSh" style="color:var(--muted);font-weight:500"></span></div>
+      <button class="btn" onclick="newWeek()">Start new week</button>
+    </div>
+    <div id="gymBanner" class="banner warn"></div>
+    <div class="foot" style="text-align:left;margin-top:10px">
+      Tip: knock out one <b>Legs &amp; Shoulders</b> day at the gym and tick it as done. After that, every other day is home-friendly and the 2nd legs/shoulders day can be a light dumbbell session.
+    </div>
+  </section>
+
+  <!-- WEEK -->
+  <section>
+    <h2 style="font-size:15px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:0 0 12px 2px">This Week</h2>
+    <div id="week" class="week"></div>
+  </section>
+
+  <!-- PROTEIN -->
+  <section class="panel" style="margin-top:18px">
+    <h2>Protein today — <span id="todayLabel" style="color:var(--txt)"></span></h2>
+    <div class="prot-top">
+      <div class="ring-wrap">
+        <div class="pnum"><span id="pEaten">0</span><small>g</small></div>
+        <div class="pgoal">of goal <b id="pGoalLabel">0</b> g · <span id="pLeft">0</span> g to go</div>
+      </div>
+    </div>
+    <div class="pbar"><i id="pFill"></i></div>
+    <div class="quick">
+      <button onclick="addProtein(10)">+10</button>
+      <button onclick="addProtein(20)">+20</button>
+      <button onclick="addProtein(25)">+25</button>
+      <button onclick="addProtein(30)">+30</button>
+      <button onclick="addProtein(40)">+40</button>
+      <input id="customP" type="number" min="0" placeholder="custom g" style="width:100px">
+      <button class="btn accent" onclick="addCustom()">Add</button>
+    </div>
+    <div id="pLog" class="log"></div>
+  </section>
+
+  <div class="foot">Everything saves automatically on this device. Bookmark this page or add it to your phone home screen.</div>
+</div>
+
+<script>
+/* ============ DATA: muscle map SVG ============ */
+function bodySVG(parts){
+  // parts: array of tokens to highlight
+  const on = t => parts.includes(t) ? 'var(--accent)' : '#3a3f4a';
+  // two small figures: front + back, 110x150 viewBox
+  return `<svg width="78" height="60" viewBox="0 0 220 150" xmlns="http://www.w3.org/2000/svg">
+   <!-- FRONT -->
+   <g>
+    <circle cx="50" cy="18" r="11" fill="#3a3f4a"/>
+    <rect x="33" y="30" width="34" height="9" rx="4" fill="${on('shoulders')}"/>
+    <rect x="37" y="40" width="26" height="22" rx="6" fill="${on('chest')}"/>
+    <rect x="24" y="40" width="11" height="26" rx="5" fill="${on('biceps')}"/>
+    <rect x="65" y="40" width="11" height="26" rx="5" fill="${on('biceps')}"/>
+    <rect x="40" y="62" width="20" height="20" rx="4" fill="${on('abs')}"/>
+    <rect x="38" y="84" width="11" height="30" rx="5" fill="${on('quads')}"/>
+    <rect x="51" y="84" width="11" height="30" rx="5" fill="${on('quads')}"/>
+    <rect x="39" y="116" width="9" height="24" rx="4" fill="${on('calves')}"/>
+    <rect x="52" y="116" width="9" height="24" rx="4" fill="${on('calves')}"/>
+    <text x="50" y="150" fill="#777" font-size="9" text-anchor="middle">front</text>
+   </g>
+   <!-- BACK -->
+   <g transform="translate(120,0)">
+    <circle cx="50" cy="18" r="11" fill="#3a3f4a"/>
+    <rect x="35" y="30" width="30" height="10" rx="4" fill="${on('traps')}"/>
+    <rect x="36" y="40" width="28" height="24" rx="6" fill="${on('back')}"/>
+    <rect x="24" y="40" width="11" height="26" rx="5" fill="${on('triceps')}"/>
+    <rect x="65" y="40" width="11" height="26" rx="5" fill="${on('triceps')}"/>
+    <rect x="38" y="64" width="24" height="14" rx="5" fill="${on('glutes')}"/>
+    <rect x="38" y="80" width="11" height="30" rx="5" fill="${on('hams')}"/>
+    <rect x="51" y="80" width="11" height="30" rx="5" fill="${on('hams')}"/>
+    <rect x="39" y="112" width="9" height="24" rx="4" fill="${on('calves')}"/>
+    <rect x="52" y="112" width="9" height="24" rx="4" fill="${on('calves')}"/>
+    <text x="50" y="150" fill="#777" font-size="9" text-anchor="middle">back</text>
+   </g>
+  </svg>`;
+}
+function yt(q){ return 'https://www.youtube.com/results?search_query='+encodeURIComponent(q+' proper form'); }
+
+/* ============ DATA: exercises ============ */
+// each exercise: name(home), gymName, sets/reps, muscle tokens, ytQuery
+function ex(home, gym, sr, parts, q){ return {home, gym, sr, parts, q:q||home}; }
+
+const WORKOUTS = {
+  chestTri: {
+    title:"Chest & Triceps", focus:"Push · upper body", home:true,
+    parts:["chest","triceps","shoulders"],
+    exercises:[
+      ex("Dumbbell Bench Press","Barbell Bench Press","4 × 8-12",["chest"]),
+      ex("Incline Dumbbell Press","Incline Barbell / Machine Press","3 × 10-12",["chest","shoulders"]),
+      ex("Dumbbell Fly (on bench)","Cable Fly / Pec Deck","3 × 12-15",["chest"]),
+      ex("Overhead DB Triceps Extension","Cable Overhead Extension","3 × 10-12",["triceps"]),
+      ex("DB Skull Crusher (on bench)","Rope Triceps Pushdown","3 × 10-12",["triceps"]),
+      ex("Close-Grip DB Press","Close-Grip Bench Press","3 × 10-12",["triceps","chest"])
+    ]
+  },
+  backBi: {
+    title:"Back & Biceps", focus:"Pull · upper body", home:true,
+    parts:["back","biceps","traps"],
+    exercises:[
+      ex("One-Arm DB Row (on bench)","Seated Cable Row","4 × 8-12",["back"]),
+      ex("Chest-Supported DB Row","T-Bar / Machine Row","3 × 10-12",["back","traps"]),
+      ex("Dumbbell Pullover","Lat Pulldown","3 × 10-12",["back"]),
+      ex("DB Reverse Fly (on bench)","Reverse Pec Deck","3 × 12-15",["traps","shoulders"]),
+      ex("Dumbbell Biceps Curl","EZ-Bar / Cable Curl","3 × 10-12",["biceps"]),
+      ex("Dumbbell Hammer Curl","Cable Hammer Curl","3 × 10-12",["biceps"])
+    ]
+  },
+  legsSh: {
+    title:"Legs & Shoulders", focus:"Gym day · lower + delts", home:false,
+    parts:["quads","hams","glutes","calves","shoulders","traps"],
+    gymMuscles:["legs","shoulders"],
+    exercises:[
+      ex("Dumbbell Goblet Squat","Barbell Back Squat","4 × 8-12",["quads","glutes"],"barbell back squat"),
+      ex("Bulgarian Split Squat (DB)","Leg Press","3 × 10-12 each",["quads","glutes"],"leg press"),
+      ex("Dumbbell Romanian Deadlift","Barbell RDL / Leg Curl","3 × 10-12",["hams","glutes"],"romanian deadlift"),
+      ex("DB Calf Raise (on step)","Standing Calf Raise Machine","4 × 15-20",["calves"],"standing calf raise"),
+      ex("Seated DB Shoulder Press","Barbell Overhead Press","4 × 8-12",["shoulders"],"overhead press"),
+      ex("Dumbbell Lateral Raise","Cable Lateral Raise","3 × 12-20",["shoulders"],"lateral raise"),
+      ex("DB Rear-Delt Fly","Face Pull (cable)","3 × 15-20",["traps","shoulders"],"face pull")
+    ]
+  }
+};
+
+// 6-session order across the week (PPL x2)
+const SEQUENCE = ["chestTri","backBi","legsSh","chestTri","backBi","legsSh"];
+const DOW = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+
+/* ============ STATE / STORAGE ============ */
+const KEY="workoutPlannerV1";
+let S = load();
+function load(){
+  try{ const d=JSON.parse(localStorage.getItem(KEY)); if(d) return d; }catch(e){}
+  return { restDay:6 /*Sunday*/, goal:150, loc:{}, done:{}, protein:{}, weekStart:weekKey() };
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
+function weekKey(){ const d=new Date(); const day=(d.getDay()+6)%7; const m=new Date(d); m.setDate(d.getDate()-day); return m.toISOString().slice(0,10); }
+function todayKey(){ return new Date().toISOString().slice(0,10); }
+function todayDow(){ return (new Date().getDay()+6)%7; } // 0=Mon
+
+/* build schedule: map each weekday(0-6) -> workout key or 'rest' */
+function schedule(){
+  const map={}; map[S.restDay]='rest';
+  let i=0;
+  for(let d=0; d<7; d++){
+    if(d===S.restDay) continue;
+    map[d]=SEQUENCE[i]; i++;
+  }
+  return map;
+}
+
+/* ============ RENDER ============ */
+function renderSetup(){
+  const sel=document.getElementById('restDay'); sel.innerHTML='';
+  DOW.forEach((d,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=d; if(i===S.restDay)o.selected=true; sel.appendChild(o); });
+  document.getElementById('proteinGoal').value=S.goal;
+}
+
+function renderWeek(){
+  const map=schedule(); const wk=document.getElementById('week'); wk.innerHTML='';
+  const td=todayDow();
+  for(let d=0; d<7; d++){
+    const key=map[d];
+    const day=document.createElement('div');
+    day.className='day'+(d===td?' today':'')+(key==='rest'?' restday':'');
+    if(key==='rest'){
+      day.innerHTML=`<div class="dhead"><div class="dow">${DOW[d]} ${d===td?'· Today':''}<span class="pill rest">Rest</span></div>
+        <div class="dtitle">Rest & Recover</div>
+        <div class="focus">Sleep, walk, stretch, hit your protein goal.</div></div>`;
+      wk.appendChild(day); continue;
+    }
+    const w=WORKOUTS[key];
+    const did=d+'_'+S.weekStart;
+    const loc = S.loc[did] || (w.home?'home':'gym');
+    const pill = w.home?'<span class="pill home">Home OK</span>':'<span class="pill gym">Gym better</span>';
+    let exHTML='';
+    w.exercises.forEach((e,idx)=>{
+      const showGym = loc==='gym';
+      const nm = showGym? e.gym : e.home;
+      const tag = (!w.home && loc==='home') ? '<span class="gymtag"> (home version)</span>' : '';
+      exHTML+=`<div class="ex">
+        <div class="thumb">${bodySVG(e.parts)}</div>
+        <div class="info">
+          <div class="nm">${nm}${tag}</div>
+          <div class="sr">${e.sr}</div>
+        </div>
+        <a class="yt" href="${yt(showGym? (e.gym):(e.home))}" target="_blank">▶ video</a>
+      </div>`;
+    });
+    const doneChecked = S.done[did] ? 'checked':'';
+    day.innerHTML=`
+      <div class="dhead">
+        <div class="dow">${DOW[d]} ${d===td?'· Today':''} ${pill}</div>
+        <div class="dtitle">${w.title}</div>
+        <div class="focus">${w.focus}</div>
+      </div>
+      <div class="dbody">
+        <div class="loc-toggle">
+          <button class="${loc==='home'?'on home':''}" onclick="setLoc(${d},'home')">🏠 Home</button>
+          <button class="${loc==='gym'?'on gym':''}" onclick="setLoc(${d},'gym')">🏋️ Gym</button>
+        </div>
+        ${exHTML}
+        <label class="done-row"><input type="checkbox" ${doneChecked} onchange="toggleDone(${d},this.checked)"> Mark done ${loc==='gym'?'(at gym)':'(at home)'}</label>
+      </div>`;
+    wk.appendChild(day);
+  }
+  renderGymStatus();
+}
+
+function renderGymStatus(){
+  // did the user complete a legsSh session at the gym this week?
+  const map=schedule();
+  let legsGym=false, shGym=false, anyGymDone=false;
+  for(let d=0; d<7; d++){
+    if(map[d]==='legsSh'){
+      const did=d+'_'+S.weekStart;
+      const loc = S.loc[did] || 'gym';
+      if(S.done[did] && loc==='gym'){ legsGym=true; shGym=true; anyGymDone=true; }
+    }
+  }
+  set('dotLegs', legsGym); set('txtLegs', legsGym?'✓ trained at gym':'· still needed');
+  set('dotSh', shGym); set('txtSh', shGym?'✓ trained at gym':'· still needed');
+  const b=document.getElementById('gymBanner');
+  if(legsGym && shGym){
+    b.className='banner ok';
+    b.innerHTML='✅ You already hit the gym for <b>Legs &amp; Shoulders</b> this week. The rest of your days are all home-friendly — no gym trip required. Your 2nd legs/shoulders day can be a lighter dumbbell session at home.';
+  }else{
+    b.className='banner warn';
+    b.innerHTML='⚠️ You still need <b>one gym session</b> for Legs &amp; Shoulders this week. Do a "Legs &amp; Shoulders" day at the gym and tick it done — then you\'re free to stay home the rest of the week.';
+  }
+  function set(id, ok){ const el=document.getElementById(id); if(el.classList) el.className='dot '+(ok?'ok':'no'); }
+  function setTxt(){}
+}
+function set(id,v){ const el=document.getElementById(id); if(el) el.textContent=v; }
+
+/* ============ PROTEIN ============ */
+function renderProtein(){
+  const tk=todayKey();
+  document.getElementById('todayLabel').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+  const day=S.protein[tk]||{total:0,items:[]};
+  const goal=S.goal||0;
+  document.getElementById('pEaten').textContent=day.total;
+  document.getElementById('pGoalLabel').textContent=goal;
+  document.getElementById('pLeft').textContent=Math.max(0,goal-day.total);
+  const pct=goal>0?Math.min(100,Math.round(day.total/goal*100)):0;
+  document.getElementById('pFill').style.width=pct+'%';
+  const log=document.getElementById('pLog'); log.innerHTML='';
+  if(day.items.length){
+    day.items.forEach((it,i)=>{
+      const row=document.createElement('div'); row.className='item';
+      row.innerHTML=`<span>+${it} g</span><button onclick="delProtein(${i})" title="remove">✕</button>`;
+      log.appendChild(row);
+    });
+  }else{
+    log.innerHTML='<div class="item" style="border:none">No protein logged yet today.</div>';
+  }
+}
+function addProtein(g){
+  const tk=todayKey(); if(!S.protein[tk])S.protein[tk]={total:0,items:[]};
+  S.protein[tk].total+=g; S.protein[tk].items.push(g); save(); renderProtein();
+}
+function addCustom(){
+  const v=parseInt(document.getElementById('customP').value,10);
+  if(v>0){ addProtein(v); document.getElementById('customP').value=''; }
+}
+function delProtein(i){
+  const tk=todayKey(); const d=S.protein[tk]; if(!d)return;
+  d.total-=d.items[i]; d.items.splice(i,1); if(d.total<0)d.total=0; save(); renderProtein();
+}
+
+/* ============ ACTIONS ============ */
+function setRest(v){ S.restDay=parseInt(v,10); save(); renderWeek(); }
+function setGoal(v){ S.goal=parseInt(v,10)||0; save(); renderProtein(); }
+function setLoc(d,loc){ S.loc[d+'_'+S.weekStart]=loc; save(); renderWeek(); }
+function toggleDone(d,c){ S.done[d+'_'+S.weekStart]=c; save(); renderWeek(); }
+function newWeek(){
+  if(!confirm('Start a fresh week? This clears workout completion + location choices (protein history is kept).'))return;
+  S.weekStart=weekKey(); S.loc={}; S.done={}; save(); renderWeek();
+}
+function resetAll(){
+  if(!confirm('Reset EVERYTHING including protein history?'))return;
+  localStorage.removeItem(KEY); S=load(); init();
+}
+
+/* ============ BACKUP ============ */
+function exportData(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='workout-backup-'+todayKey()+'.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  alert('Backup saved to your Files / Downloads. Keep it safe — you can Restore from it anytime.');
+}
+function importData(file){
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{ try{ const d=JSON.parse(e.target.result);
+      if(d && typeof d==='object'){ S=Object.assign(load(),d); save(); init(); alert('Restored! Your data is back.'); }
+      else alert('That file does not look like a valid backup.');
+    }catch(err){ alert('Could not read that backup file.'); } };
+  r.readAsText(file);
+}
+
+/* ============ INIT ============ */
+function init(){ renderSetup(); renderWeek(); renderProtein(); }
+init();
+</script>
+</body>
+</html>
