@@ -95,6 +95,36 @@
   .foot{color:var(--muted);font-size:12px;text-align:center;margin-top:8px}
   .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}
   .legend span{display:inline-flex;align-items:center;gap:6px}
+  /* profile */
+  .profile{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .pavatar{flex:0 0 auto;width:58px;height:58px;border-radius:16px;background:linear-gradient(135deg,var(--accent),#ff8a4d);
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#fff;letter-spacing:1px}
+  .pname{font-size:18px;font-weight:700;line-height:1.1}
+  .pmeta{font-size:12px;color:var(--muted);margin-top:3px}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-left:auto}
+  .stat{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:8px 14px;text-align:center;min-width:74px}
+  .stat .v{font-size:18px;font-weight:800}
+  .stat .v input{width:54px;background:transparent;border:none;border-bottom:1px dashed var(--line);color:var(--txt);font-size:18px;font-weight:800;text-align:center;padding:0}
+  .stat .k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+  .stat .v small{font-size:11px;color:var(--muted);font-weight:600}
+  .goalbar{margin-top:12px}
+  .goalbar .lab{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px}
+  .gbar{height:10px;background:var(--card2);border-radius:999px;overflow:hidden;border:1px solid var(--line);position:relative}
+  .gbar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--good));width:0;transition:width .35s}
+  /* accordion week */
+  .week{display:flex;flex-direction:column;gap:10px}
+  details.day{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  details.day.today{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,90,77,.22)}
+  details.day.restday{opacity:.8}
+  details.day>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:13px 15px}
+  details.day>summary::-webkit-details-marker{display:none}
+  details.day>summary .sday{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;min-width:74px}
+  details.day.today>summary .sday{color:var(--accent)}
+  details.day>summary .stitle{font-size:15px;font-weight:700;flex:1;min-width:0}
+  details.day>summary .schev{color:var(--muted);font-size:13px;transition:transform .2s}
+  details.day[open]>summary .schev{transform:rotate(180deg)}
+  details.day .dbody{padding:0 15px 14px}
+  .sdone{color:var(--good);font-size:12px;font-weight:700;margin-left:4px}
 </style>
 </head>
 <body>
@@ -111,6 +141,26 @@
       <button class="btn" onclick="resetAll()">Reset</button>
     </div>
   </header>
+
+  <!-- PROFILE -->
+  <section class="panel">
+    <div class="profile">
+      <div class="pavatar">VJ</div>
+      <div>
+        <div class="pname">Vittawat J.</div>
+        <div class="pmeta">Age 42 · 182 cm · Goal: build muscle</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="v"><input id="wInput" type="number" min="40" max="200" step="0.5" onchange="setWeight(this.value)"> <small>kg</small></div><div class="k">Weight</div></div>
+        <div class="stat"><div class="v" id="bmiVal">–</div><div class="k" id="bmiCat">BMI</div></div>
+        <div class="stat"><div class="v" id="goalVal">80<small>kg</small></div><div class="k">Lean goal</div></div>
+      </div>
+    </div>
+    <div class="goalbar">
+      <div class="lab"><span id="goalNote"></span><span id="goalRange"></span></div>
+      <div class="gbar"><i id="goalFill"></i></div>
+    </div>
+  </section>
 
   <!-- SETTINGS -->
   <section class="panel">
@@ -146,7 +196,7 @@
     </div>
     <div id="gymBanner" class="banner warn"></div>
     <div class="foot" style="text-align:left;margin-top:10px">
-      Your only gym-dependent work is <b>Legs &amp; Back</b> (heavy lower-body + lat pulldowns). Everything else — chest, shoulders, arms — is fully covered by dumbbells + bench at home. Tick each gym day done <i>(at gym)</i> to track your 2 visits. Can't get to the gym? Flip that day to <b>Home</b> for a dumbbell leg session.
+      Gym days use your 3 machines: <b>Leg Extension/Curl (PL9019)</b>, <b>Lat Pulldown/Row (PL9002)</b>, and <b>Shoulder Press (Multi Press PL9021)</b> — the work that's hard at home. Biceps, chest &amp; side-delts stay home. Tick each gym day done <i>(at gym)</i> to track your 2 visits. Can't get there? Flip that day to <b>Home</b> for a dumbbell version.
     </div>
   </section>
 
@@ -247,29 +297,25 @@ function ex(home, gym, sr, parts, q){ return {home, gym, sr, parts, q:q||home}; 
 
 const WORKOUTS = {
   gymA: {
-    title:"Legs & Back A", focus:"GYM · quads + lats", home:false, gymDay:true,
-    parts:["quads","glutes","calves","back"],
+    title:"Legs · Back · Shoulders A", focus:"GYM machines · leg priority", home:false, gymDay:true,
+    parts:["quads","hams","back","shoulders"],
     exercises:[
-      ex("DB Goblet Squat","Barbell Back Squat","4 × 6-10",["quads","glutes"],"barbell back squat"),
-      ex("DB Bulgarian Split Squat","Leg Press","3 × 10-12 each",["quads","glutes"],"leg press"),
-      ex("DB Step-Up (on bench)","Leg Extension","3 × 12-15",["quads"],"leg extension"),
-      ex("DB Pullover","Lat Pulldown","4 × 8-12",["back"],"lat pulldown"),
-      ex("One-Arm DB Row","Seated Cable Row","3 × 10-12",["back"],"seated cable row"),
-      ex("DB Calf Raise (on step)","Standing Calf Raise","4 × 12-20",["calves"],"standing calf raise"),
-      ex("DB Lateral Raise — optional finisher","Cable Lateral Raise","2-3 × 15-20",["shoulders"],"lateral raise")
+      ex("DB Bulgarian Split Squat","Leg Extension — PLAMAX PL9019","4 × 12-15",["quads"],"leg extension machine"),
+      ex("DB Romanian Deadlift","Leg Curl — PLAMAX PL9019","4 × 12-15",["hams"],"leg curl machine"),
+      ex("DB Pullover","Lat Pulldown — PLAMAX PL9002","4 × 8-12",["back"],"lat pulldown"),
+      ex("One-Arm DB Row","Seated Row — PLAMAX PL9002","3 × 10-12",["back","traps"],"seated row machine"),
+      ex("Seated DB Shoulder Press","Shoulder Press — Multi Press PL9021","3 × 8-12",["shoulders"],"machine shoulder press")
     ]
   },
   gymB: {
-    title:"Legs & Back B", focus:"GYM · hamstrings/glutes + lats", home:false, gymDay:true,
-    parts:["hams","glutes","quads","back","traps"],
+    title:"Legs · Back · Shoulders B", focus:"GYM machines · back/shoulder priority", home:false, gymDay:true,
+    parts:["back","shoulders","quads","hams"],
     exercises:[
-      ex("DB Romanian Deadlift","Barbell Romanian Deadlift","4 × 8-12",["hams","glutes"],"romanian deadlift"),
-      ex("DB Goblet Squat","Hack Squat / Front Squat","3 × 8-12",["quads","glutes"],"hack squat"),
-      ex("DB Glute Bridge (on bench)","Hip Thrust","3 × 10-15",["glutes","hams"],"hip thrust"),
-      ex("Single-Leg DB RDL","Seated Leg Curl","3 × 10-15",["hams"],"seated leg curl"),
-      ex("DB Pullover","Wide-Grip Lat Pulldown","4 × 8-12",["back"],"lat pulldown"),
-      ex("Chest-Supported DB Row","Chest-Supported / T-Bar Row","3 × 10-12",["back","traps"],"chest supported row"),
-      ex("DB Rear-Delt Fly — optional","Face Pull (cable)","2-3 × 15-20",["traps","shoulders"],"face pull")
+      ex("DB Pullover","Lat Pulldown — PLAMAX PL9002","4 × 8-12",["back"],"lat pulldown"),
+      ex("Chest-Supported DB Row","Seated Row — PLAMAX PL9002","4 × 10-12",["back","traps"],"seated row machine"),
+      ex("Seated DB Shoulder Press","Shoulder Press — Multi Press PL9021","4 × 8-12",["shoulders"],"machine shoulder press"),
+      ex("DB Bulgarian Split Squat","Leg Extension — PLAMAX PL9019","3 × 12-15",["quads"],"leg extension machine"),
+      ex("DB Romanian Deadlift","Leg Curl — PLAMAX PL9019","3 × 12-15",["hams"],"leg curl machine")
     ]
   },
   chestTri: {
@@ -327,7 +373,7 @@ const KEY="workoutPlannerV1";
 let S = load();
 function load(){
   try{ const d=JSON.parse(localStorage.getItem(KEY)); if(d) return d; }catch(e){}
-  return { restDay:6 /*Sunday*/, goal:150, cgoal:5, loc:{}, done:{}, protein:{}, creatine:{}, weekStart:weekKey() };
+  return { restDay:6 /*Sunday*/, goal:150, cgoal:5, height:182, weight:77, wgoal:80, loc:{}, done:{}, protein:{}, creatine:{}, weekStart:weekKey() };
 }
 function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
 function weekKey(){ const d=new Date(); const day=(d.getDay()+6)%7; const m=new Date(d); m.setDate(d.getDate()-day); return m.toISOString().slice(0,10); }
@@ -345,6 +391,33 @@ function schedule(){
   return map;
 }
 
+/* ============ PROFILE ============ */
+function renderProfile(){
+  const h=(S.height||182)/100, w=S.weight||77, goal=S.wgoal||80;
+  document.getElementById('wInput').value=w;
+  document.getElementById('goalVal').innerHTML=goal+'<small>kg</small>';
+  const bmi=w/(h*h);
+  let cat='', col='var(--good)';
+  if(bmi<18.5){cat='Under'; col='var(--accent2)';}
+  else if(bmi<25){cat='Healthy'; col='var(--good)';}
+  else if(bmi<30){cat='Over'; col='var(--gym)';}
+  else {cat='High'; col='var(--accent)';}
+  const bv=document.getElementById('bmiVal'); bv.textContent=bmi.toFixed(1); bv.style.color=col;
+  document.getElementById('bmiCat').textContent='BMI · '+cat;
+  // healthy weight range for this height
+  const lo=(18.5*h*h), hi=(24.9*h*h);
+  document.getElementById('goalRange').textContent='Healthy range '+lo.toFixed(0)+'–'+hi.toFixed(0)+' kg';
+  const diff=goal-w;
+  document.getElementById('goalNote').innerHTML = Math.abs(diff)<0.5
+    ? 'At your lean-muscle goal 🎯'
+    : (diff>0 ? '<b>+'+diff.toFixed(1)+' kg</b> to lean-muscle goal (slow gain)'
+              : '<b>'+diff.toFixed(1)+' kg</b> to lean-muscle goal');
+  // progress bar: position current weight within healthy range
+  const pct=Math.max(0,Math.min(100,(w-lo)/(hi-lo)*100));
+  document.getElementById('goalFill').style.width=pct+'%';
+}
+function setWeight(v){ S.weight=parseFloat(v)||S.weight; save(); renderProfile(); }
+
 /* ============ RENDER ============ */
 function renderSetup(){
   const sel=document.getElementById('restDay'); sel.innerHTML='';
@@ -358,20 +431,26 @@ function renderWeek(){
   const td=todayDow();
   for(let d=0; d<7; d++){
     const key=map[d];
-    const day=document.createElement('div');
-    day.className='day'+(d===td?' today':'')+(key==='rest'?' restday':'');
+    const isToday=d===td;
+    const det=document.createElement('details');
+    det.className='day'+(isToday?' today':'')+(key==='rest'?' restday':'');
+    if(isToday) det.open=true;
+    const did=d+'_'+S.weekStart;
     if(key==='rest'){
-      day.innerHTML=`<div class="dhead"><div class="dow">${DOW[d]} ${d===td?'· Today':''}<span class="pill rest">Rest</span></div>
-        <div class="dtitle">Rest & Recover</div>
-        <div class="focus">Sleep, walk, stretch, hit your protein goal.</div></div>`;
-      wk.appendChild(day); continue;
+      det.innerHTML=`<summary>
+          <div class="sday">${DOW[d]}${isToday?' · Today':''}</div>
+          <div class="stitle">Rest &amp; Recover <span class="pill rest">Rest</span></div>
+          <div class="schev">▾</div>
+        </summary>
+        <div class="dbody"><div class="focus">Sleep, walk, light stretch, and still hit your protein + creatine goals.</div></div>`;
+      wk.appendChild(det); continue;
     }
     const w=WORKOUTS[key];
-    const did=d+'_'+S.weekStart;
     const loc = S.loc[did] || (w.home?'home':'gym');
-    const pill = w.home?'<span class="pill home">Home OK</span>':'<span class="pill gym">Gym better</span>';
+    const pill = w.home?'<span class="pill home">Home</span>':'<span class="pill gym">Gym</span>';
+    const doneFlag = S.done[did] ? '<span class="sdone">✓ done</span>' : '';
     let exHTML='';
-    w.exercises.forEach((e,idx)=>{
+    w.exercises.forEach((e)=>{
       const showGym = loc==='gym';
       const nm = showGym? e.gym : e.home;
       const tag = (!w.home && loc==='home') ? '<span class="gymtag"> (home version)</span>' : '';
@@ -385,13 +464,14 @@ function renderWeek(){
       </div>`;
     });
     const doneChecked = S.done[did] ? 'checked':'';
-    day.innerHTML=`
-      <div class="dhead">
-        <div class="dow">${DOW[d]} ${d===td?'· Today':''} ${pill}</div>
-        <div class="dtitle">${w.title}</div>
-        <div class="focus">${w.focus}</div>
-      </div>
+    det.innerHTML=`
+      <summary>
+        <div class="sday">${DOW[d]}${isToday?' · Today':''}</div>
+        <div class="stitle">${w.title} ${pill}${doneFlag}</div>
+        <div class="schev">▾</div>
+      </summary>
       <div class="dbody">
+        <div class="focus" style="margin-bottom:8px">${w.focus}</div>
         <div class="loc-toggle">
           <button class="${loc==='home'?'on home':''}" onclick="setLoc(${d},'home')">🏠 Home</button>
           <button class="${loc==='gym'?'on gym':''}" onclick="setLoc(${d},'gym')">🏋️ Gym</button>
@@ -399,7 +479,7 @@ function renderWeek(){
         ${exHTML}
         <label class="done-row"><input type="checkbox" ${doneChecked} onchange="toggleDone(${d},this.checked)"> Mark done ${loc==='gym'?'(at gym)':'(at home)'}</label>
       </div>`;
-    wk.appendChild(day);
+    wk.appendChild(det);
   }
   renderGymStatus();
 }
@@ -543,7 +623,7 @@ function importData(file){
 }
 
 /* ============ INIT ============ */
-function init(){ renderSetup(); renderWeek(); renderProtein(); renderCreatine(); }
+function init(){ renderProfile(); renderSetup(); renderWeek(); renderProtein(); renderCreatine(); }
 init();
 </script>
 </body>
