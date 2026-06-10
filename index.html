@@ -102,7 +102,7 @@
   <header class="top">
     <div>
       <h1>My 7-Day <span>Workout</span> Planner</h1>
-      <div class="sub">Dumbbell + Bench at home · Full gym in the village · Build-muscle plan</div>
+      <div class="sub">6 days · 2 gym visits (Legs &amp; Back) · 4 home days (DB + bench) · Build-muscle</div>
     </div>
     <div class="row" style="gap:8px">
       <button class="btn" onclick="exportData()">⬇ Backup</button>
@@ -140,13 +140,13 @@
   <section class="panel">
     <h2>Do I need the gym this week?</h2>
     <div class="status">
-      <div class="chip"><span id="dotLegs" class="dot no"></span> Legs <span id="txtLegs" style="color:var(--muted);font-weight:500"></span></div>
-      <div class="chip"><span id="dotSh" class="dot no"></span> Shoulders <span id="txtSh" style="color:var(--muted);font-weight:500"></span></div>
+      <div class="chip"><span id="dotG1" class="dot no"></span> Gym visit 1 <span id="txtG1" style="color:var(--muted);font-weight:500"></span></div>
+      <div class="chip"><span id="dotG2" class="dot no"></span> Gym visit 2 <span id="txtG2" style="color:var(--muted);font-weight:500"></span></div>
       <button class="btn" onclick="newWeek()">Start new week</button>
     </div>
     <div id="gymBanner" class="banner warn"></div>
     <div class="foot" style="text-align:left;margin-top:10px">
-      Tip: knock out one <b>Legs &amp; Shoulders</b> day at the gym and tick it as done. After that, every other day is home-friendly and the 2nd legs/shoulders day can be a light dumbbell session.
+      Your only gym-dependent work is <b>Legs &amp; Back</b> (heavy lower-body + lat pulldowns). Everything else — chest, shoulders, arms — is fully covered by dumbbells + bench at home. Tick each gym day done <i>(at gym)</i> to track your 2 visits. Can't get to the gym? Flip that day to <b>Home</b> for a dumbbell leg session.
     </div>
   </section>
 
@@ -246,48 +246,80 @@ function yt(q){ return 'https://www.youtube.com/results?search_query='+encodeURI
 function ex(home, gym, sr, parts, q){ return {home, gym, sr, parts, q:q||home}; }
 
 const WORKOUTS = {
+  gymA: {
+    title:"Legs & Back A", focus:"GYM · quads + lats", home:false, gymDay:true,
+    parts:["quads","glutes","calves","back"],
+    exercises:[
+      ex("DB Goblet Squat","Barbell Back Squat","4 × 6-10",["quads","glutes"],"barbell back squat"),
+      ex("DB Bulgarian Split Squat","Leg Press","3 × 10-12 each",["quads","glutes"],"leg press"),
+      ex("DB Step-Up (on bench)","Leg Extension","3 × 12-15",["quads"],"leg extension"),
+      ex("DB Pullover","Lat Pulldown","4 × 8-12",["back"],"lat pulldown"),
+      ex("One-Arm DB Row","Seated Cable Row","3 × 10-12",["back"],"seated cable row"),
+      ex("DB Calf Raise (on step)","Standing Calf Raise","4 × 12-20",["calves"],"standing calf raise"),
+      ex("DB Lateral Raise — optional finisher","Cable Lateral Raise","2-3 × 15-20",["shoulders"],"lateral raise")
+    ]
+  },
+  gymB: {
+    title:"Legs & Back B", focus:"GYM · hamstrings/glutes + lats", home:false, gymDay:true,
+    parts:["hams","glutes","quads","back","traps"],
+    exercises:[
+      ex("DB Romanian Deadlift","Barbell Romanian Deadlift","4 × 8-12",["hams","glutes"],"romanian deadlift"),
+      ex("DB Goblet Squat","Hack Squat / Front Squat","3 × 8-12",["quads","glutes"],"hack squat"),
+      ex("DB Glute Bridge (on bench)","Hip Thrust","3 × 10-15",["glutes","hams"],"hip thrust"),
+      ex("Single-Leg DB RDL","Seated Leg Curl","3 × 10-15",["hams"],"seated leg curl"),
+      ex("DB Pullover","Wide-Grip Lat Pulldown","4 × 8-12",["back"],"lat pulldown"),
+      ex("Chest-Supported DB Row","Chest-Supported / T-Bar Row","3 × 10-12",["back","traps"],"chest supported row"),
+      ex("DB Rear-Delt Fly — optional","Face Pull (cable)","2-3 × 15-20",["traps","shoulders"],"face pull")
+    ]
+  },
   chestTri: {
-    title:"Chest & Triceps", focus:"Push · upper body", home:true,
+    title:"Chest & Triceps", focus:"Home · push", home:true,
     parts:["chest","triceps","shoulders"],
     exercises:[
-      ex("Dumbbell Bench Press","Barbell Bench Press","4 × 8-12",["chest"]),
-      ex("Incline Dumbbell Press","Incline Barbell / Machine Press","3 × 10-12",["chest","shoulders"]),
-      ex("Dumbbell Fly (on bench)","Cable Fly / Pec Deck","3 × 12-15",["chest"]),
+      ex("DB Bench Press","Barbell Bench Press","4 × 8-12",["chest"]),
+      ex("Incline DB Press","Incline Barbell Press","3 × 10-12",["chest","shoulders"]),
+      ex("DB Fly (on bench)","Cable Fly / Pec Deck","3 × 12-15",["chest"]),
       ex("Overhead DB Triceps Extension","Cable Overhead Extension","3 × 10-12",["triceps"]),
-      ex("DB Skull Crusher (on bench)","Rope Triceps Pushdown","3 × 10-12",["triceps"]),
-      ex("Close-Grip DB Press","Close-Grip Bench Press","3 × 10-12",["triceps","chest"])
+      ex("DB Skull Crusher (on bench)","Rope Pushdown","3 × 10-12",["triceps"])
     ]
   },
-  backBi: {
-    title:"Back & Biceps", focus:"Pull · upper body", home:true,
-    parts:["back","biceps","traps"],
+  shBi: {
+    title:"Shoulders & Biceps", focus:"Home · delts + biceps", home:true,
+    parts:["shoulders","biceps","traps"],
     exercises:[
-      ex("One-Arm DB Row (on bench)","Seated Cable Row","4 × 8-12",["back"]),
-      ex("Chest-Supported DB Row","T-Bar / Machine Row","3 × 10-12",["back","traps"]),
-      ex("Dumbbell Pullover","Lat Pulldown","3 × 10-12",["back"]),
-      ex("DB Reverse Fly (on bench)","Reverse Pec Deck","3 × 12-15",["traps","shoulders"]),
-      ex("Dumbbell Biceps Curl","EZ-Bar / Cable Curl","3 × 10-12",["biceps"]),
-      ex("Dumbbell Hammer Curl","Cable Hammer Curl","3 × 10-12",["biceps"])
+      ex("Seated DB Shoulder Press","Machine Shoulder Press","4 × 8-12",["shoulders"]),
+      ex("DB Lateral Raise","Cable Lateral Raise","4 × 12-20",["shoulders"]),
+      ex("DB Rear-Delt Fly (on bench)","Reverse Pec Deck","3 × 15-20",["traps","shoulders"]),
+      ex("DB Biceps Curl","EZ-Bar / Cable Curl","3 × 10-12",["biceps"]),
+      ex("DB Hammer Curl","Cable Hammer Curl","3 × 10-12",["biceps"])
     ]
   },
-  legsSh: {
-    title:"Legs & Shoulders", focus:"Gym day · lower + delts", home:false,
-    parts:["quads","hams","glutes","calves","shoulders","traps"],
-    gymMuscles:["legs","shoulders"],
+  chestBack: {
+    title:"Chest & Back", focus:"Home · push/pull (DB)", home:true,
+    parts:["chest","back","traps"],
     exercises:[
-      ex("Dumbbell Goblet Squat","Barbell Back Squat","4 × 8-12",["quads","glutes"],"barbell back squat"),
-      ex("Bulgarian Split Squat (DB)","Leg Press","3 × 10-12 each",["quads","glutes"],"leg press"),
-      ex("Dumbbell Romanian Deadlift","Barbell RDL / Leg Curl","3 × 10-12",["hams","glutes"],"romanian deadlift"),
-      ex("DB Calf Raise (on step)","Standing Calf Raise Machine","4 × 15-20",["calves"],"standing calf raise"),
-      ex("Seated DB Shoulder Press","Barbell Overhead Press","4 × 8-12",["shoulders"],"overhead press"),
-      ex("Dumbbell Lateral Raise","Cable Lateral Raise","3 × 12-20",["shoulders"],"lateral raise"),
-      ex("DB Rear-Delt Fly","Face Pull (cable)","3 × 15-20",["traps","shoulders"],"face pull")
+      ex("Incline DB Press","Incline Barbell Press","4 × 8-12",["chest","shoulders"]),
+      ex("One-Arm DB Row","Seated Cable Row","4 × 8-12",["back"]),
+      ex("DB Fly (on bench)","Cable Fly","3 × 12-15",["chest"]),
+      ex("DB Pullover","Lat Pulldown","3 × 10-12",["back"]),
+      ex("DB Reverse Fly (on bench)","Reverse Pec Deck","3 × 15-20",["traps","shoulders"])
+    ]
+  },
+  armsSh: {
+    title:"Arms & Shoulders", focus:"Home · delts + arms", home:true,
+    parts:["shoulders","biceps","triceps"],
+    exercises:[
+      ex("DB Arnold Press","Machine Shoulder Press","4 × 10-12",["shoulders"]),
+      ex("DB Lateral Raise","Cable Lateral Raise","3 × 15-20",["shoulders"]),
+      ex("DB Biceps Curl","Cable Curl","3 × 10-12",["biceps"]),
+      ex("Overhead DB Triceps Extension","Cable Overhead Extension","3 × 10-12",["triceps"]),
+      ex("DB Hammer Curl","Rope Hammer Curl","3 × 12",["biceps"])
     ]
   }
 };
 
-// 6-session order across the week (PPL x2)
-const SEQUENCE = ["chestTri","backBi","legsSh","chestTri","backBi","legsSh"];
+// 6-session order: 2 gym Legs+Back days spaced apart, 4 home days
+const SEQUENCE = ["gymA","chestTri","shBi","gymB","chestBack","armsSh"];
 const DOW = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 
 /* ============ STATE / STORAGE ============ */
@@ -373,28 +405,32 @@ function renderWeek(){
 }
 
 function renderGymStatus(){
-  // did the user complete a legsSh session at the gym this week?
+  // count completed gym (Legs & Back) sessions done at the gym this week
   const map=schedule();
-  let legsGym=false, shGym=false, anyGymDone=false;
+  let gymDone=0;
   for(let d=0; d<7; d++){
-    if(map[d]==='legsSh'){
+    const w=WORKOUTS[map[d]];
+    if(w && w.gymDay){
       const did=d+'_'+S.weekStart;
       const loc = S.loc[did] || 'gym';
-      if(S.done[did] && loc==='gym'){ legsGym=true; shGym=true; anyGymDone=true; }
+      if(S.done[did] && loc==='gym') gymDone++;
     }
   }
-  set('dotLegs', legsGym); set('txtLegs', legsGym?'✓ trained at gym':'· still needed');
-  set('dotSh', shGym); set('txtSh', shGym?'✓ trained at gym':'· still needed');
+  setDot('dotG1', gymDone>=1); setTx('txtG1', gymDone>=1?'✓ done':'· to do');
+  setDot('dotG2', gymDone>=2); setTx('txtG2', gymDone>=2?'✓ done':'· to do');
   const b=document.getElementById('gymBanner');
-  if(legsGym && shGym){
+  if(gymDone>=2){
     b.className='banner ok';
-    b.innerHTML='✅ You already hit the gym for <b>Legs &amp; Shoulders</b> this week. The rest of your days are all home-friendly — no gym trip required. Your 2nd legs/shoulders day can be a lighter dumbbell session at home.';
+    b.innerHTML='✅ Both gym sessions done (<b>Legs &amp; Back</b>). The rest of your week is fully home-based — no more gym trips needed.';
+  }else if(gymDone===1){
+    b.className='banner ok';
+    b.innerHTML='✅ 1 of 2 gym sessions done. One more <b>Legs &amp; Back</b> visit to go. Can\'t make it? Flip that day to <b>Home</b> for a full dumbbell leg session.';
   }else{
     b.className='banner warn';
-    b.innerHTML='⚠️ You still need <b>one gym session</b> for Legs &amp; Shoulders this week. Do a "Legs &amp; Shoulders" day at the gym and tick it done — then you\'re free to stay home the rest of the week.';
+    b.innerHTML='⚠️ Plan <b>2 gym visits</b> this week for <b>Legs &amp; Back</b> — the only work that truly needs the gym (heavy legs + lat pulldowns). Tick each gym day done <i>(at gym)</i> to track them.';
   }
-  function set(id, ok){ const el=document.getElementById(id); if(el.classList) el.className='dot '+(ok?'ok':'no'); }
-  function setTxt(){}
+  function setDot(id,ok){ const el=document.getElementById(id); if(el) el.className='dot '+(ok?'ok':'no'); }
+  function setTx(id,t){ const el=document.getElementById(id); if(el) el.textContent=t; }
 }
 function set(id,v){ const el=document.getElementById(id); if(el) el.textContent=v; }
 
