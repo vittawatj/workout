@@ -149,6 +149,20 @@
   #wtrend svg{width:100%;height:auto;display:block}
   .trainbtn{display:block;width:100%;margin-top:14px;padding:14px;border-radius:12px;background:var(--accent);color:#fff;border:none;font-size:15px;font-weight:800;letter-spacing:.3px}
   .trainbtn.done{background:var(--card2);color:var(--good);border:1px solid var(--good);font-weight:700}
+  .skipbtn{display:block;width:100%;margin-top:8px;padding:11px;border-radius:12px;background:transparent;color:var(--muted);border:1px solid var(--line);font-size:13px;font-weight:600}
+  .skipbtn:hover{border-color:var(--muted)}
+  .cal .cell.skip{background:repeating-linear-gradient(45deg,var(--card2),var(--card2) 3px,#33373f 3px,#33373f 6px);border-color:var(--line)}
+  .recnote{font-size:12.5px;color:var(--muted);margin-top:12px;line-height:1.5;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .recnote .applybtn{background:var(--card2);border:1px solid var(--accent2);color:var(--accent2);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600}
+  .photobtn{display:inline-block;background:var(--accent);color:#fff;border-radius:10px;padding:9px 16px;font-size:14px;font-weight:700;cursor:pointer}
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;margin-top:14px}
+  .gphoto{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);aspect-ratio:3/4;background:var(--card2)}
+  .gphoto img{width:100%;height:100%;object-fit:cover;display:block;cursor:pointer}
+  .gphoto .gdate{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#fff;font-size:10px;text-align:center;padding:2px}
+  .gphoto .gdel{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:13px;line-height:1;cursor:pointer}
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:50;align-items:center;justify-content:center;padding:20px}
+  .modal.on{display:flex}
+  .modal img{max-width:100%;max-height:100%;border-radius:10px}
   .gymwarn{font-size:12.5px;color:var(--gym);margin:4px 0 10px;padding:9px 11px;background:rgba(255,159,28,.12);border:1px solid rgba(255,159,28,.35);border-radius:10px;line-height:1.45}
   .stat .v input{border-bottom:1px solid var(--accent2)}
 </style>
@@ -179,7 +193,7 @@
       <div class="stats">
         <div class="stat"><div class="v"><input id="wInput" type="number" inputmode="decimal" min="40" max="200" step="0.5" onchange="setWeight(this.value)" onblur="setWeight(this.value)"> <small>kg</small></div><div class="k">Weight ✎</div></div>
         <div class="stat"><div class="v" id="bmiVal">–</div><div class="k" id="bmiCat">BMI</div></div>
-        <div class="stat"><div class="v" id="goalVal">80<small>kg</small></div><div class="k">Lean goal</div></div>
+        <div class="stat"><div class="v"><input id="goalInput" type="number" inputmode="decimal" min="40" max="200" step="0.5" onchange="setLeanGoal(this.value)" onblur="setLeanGoal(this.value)"> <small>kg</small></div><div class="k">Lean goal ✎</div></div>
       </div>
     </div>
     <div class="goalbar">
@@ -251,6 +265,7 @@
       <input id="customP" type="number" min="0" placeholder="custom g" style="width:100px">
       <button class="btn accent" onclick="addCustom()">Add</button>
     </div>
+    <div class="recnote" id="pRec"></div>
     <div id="pLog" class="log"></div>
   </section>
 
@@ -271,8 +286,20 @@
       <input id="customC" type="number" min="0" step="0.5" placeholder="custom g" style="width:100px">
       <button class="btn accent" onclick="addCustomC()">Add</button>
     </div>
+    <div class="recnote" id="cRec"></div>
     <div class="foot" style="text-align:left;margin-top:10px">3–5 g daily is the standard maintenance dose — timing doesn't matter, just take it consistently every day, including rest days.</div>
     <div id="cLog" class="log"></div>
+  </section>
+
+  <!-- VITAMINS -->
+  <section class="panel">
+    <h2>Vitamins / Supplements — <span id="vTodayLabel" style="color:var(--txt)"></span></h2>
+    <button id="vBtn" class="trainbtn" onclick="toggleVitamin()">✓ Took my vitamins today</button>
+    <div style="margin-top:12px">
+      <label class="ctl">What I take (note):</label>
+      <input id="vNote" type="text" placeholder="e.g. Vitamin D, Omega-3, Multivitamin" style="width:100%;margin-top:6px" onchange="setVitNote(this.value)">
+    </div>
+    <div class="recnote" id="vRec" style="margin-top:10px"></div>
   </section>
 
   <!-- PROGRESS -->
@@ -299,6 +326,19 @@
       <div class="foot" style="text-align:left;margin-top:6px">Update your <b>Weight</b> in the profile card above to log today's point.</div>
     </div>
   </section>
+
+  <!-- PHOTOS -->
+  <section class="panel">
+    <h2>Progress Photos</h2>
+    <label class="photobtn">+ Add photo
+      <input id="photoInput" type="file" accept="image/*" style="display:none" onchange="addPhoto(this.files[0])">
+    </label>
+    <span class="foot" style="margin-left:10px">Stored privately on this device only.</span>
+    <div class="gallery" id="gallery"></div>
+  </section>
+
+  <!-- photo viewer -->
+  <div id="photoModal" class="modal" onclick="closePhoto()"><img id="photoModalImg" src=""></div>
 
   <div class="foot">Everything saves automatically on this device. Bookmark this page or add it to your phone home screen.</div>
 </div>
@@ -433,6 +473,7 @@ const DOW = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sund
 const HOME_KEY = {chest:'chestTri', biceps:'bicepsArms'};
 function typeOfKey(k){
   if(!k) return null;
+  if(k==='skip') return 'skip';
   if(k==='gymA'||k==='gymB') return 'gym';
   if(k==='chestTri') return 'chest';
   if(k==='bicepsArms') return 'biceps';
@@ -446,7 +487,8 @@ let S = load();
 function load(){
   try{ const d=JSON.parse(localStorage.getItem(KEY)); if(d) return d; }catch(e){}
   return { restDay:6 /*Sunday*/, goal:150, cgoal:5, age:42, height:182, weight:77, wgoal:80,
-           loc:{}, history:{}, weights:[], protein:{}, creatine:{}, period:'week' };
+           loc:{}, history:{}, weights:[], protein:{}, creatine:{}, period:'week',
+           photos:[], vit:{}, vitNote:'' };
 }
 function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
 // local-date helpers (avoid UTC offset bugs)
@@ -531,7 +573,7 @@ function renderProfile(){
   const h=(S.height||182)/100, w=S.weight||77, goal=S.wgoal||80;
   document.getElementById('wInput').value=w;
   document.getElementById('ageInput').value=(S.age!=null?S.age:42);
-  document.getElementById('goalVal').innerHTML=goal+'<small>kg</small>';
+  document.getElementById('goalInput').value=goal;
   const bmi=w/(h*h);
   let cat='', col='var(--good)';
   if(bmi<18.5){cat='Under'; col='var(--accent2)';}
@@ -560,9 +602,10 @@ function setWeight(v){
   const tk=todayKey(); const e=S.weights.find(x=>x.d===tk);
   if(e) e.kg=kg; else S.weights.push({d:tk, kg});
   S.weights.sort((a,b)=>a.d<b.d?-1:1);
-  save(); renderProfile(); renderProgress();
+  save(); renderProfile(); renderProtein(); renderProgress();
 }
 function setAge(v){ S.age=parseInt(v,10)||S.age; save(); }
+function setLeanGoal(v){ const g=parseFloat(v); if(!g) return; S.wgoal=g; save(); renderProfile(); }
 
 /* ============ RENDER ============ */
 function renderSetup(){
@@ -606,21 +649,32 @@ function renderWeek(){
     }
 
     if(isToday){
-      // interactive Today card
       const p=todayPick();
+      // skipped today
+      if(p.logged && p.key==='skip'){
+        det.innerHTML=`<summary>
+            <div class="sday">${DOW[d]} · Today</div>
+            <div class="stitle">Skipped today <span class="pill rest">Skipped</span></div>
+            <div class="schev">▾</div></summary>
+          <div class="dbody">
+            <div class="focus" style="margin-bottom:10px">No problem — rest is part of training. Your remaining sessions have shifted forward automatically.</div>
+            <button class="trainbtn done" onclick="undoToday()">↩︎ Undo skip</button>
+          </div>`;
+        wk.appendChild(det); continue;
+      }
       const w=WORKOUTS[p.key];
       const pill = (typeOfKey(p.key)==='gym') ? '<span class="pill gym">Gym</span>' : '<span class="pill home">Home</span>';
       const doneFlag = p.logged ? '<span class="sdone">✓ trained</span>' : '';
-      // gym advisory
       let warn='';
       if(!p.logged && p.loc==='gym'){
         const yda=(d-1+7)%7; const ydH = (yda!==S.restDay) && S.history[dateStrOf(yda)] && typeOfKey(S.history[dateStrOf(yda)].key)==='gym';
         if(gymsThisWeek()>=2) warn='<div class="gymwarn">You\'ve already done 2 gym days this week — a home day is better for recovery, but your call.</div>';
         else if(ydH) warn='<div class="gymwarn">You trained the gym yesterday — give legs/back/shoulders a rest day. A home session is recommended.</div>';
       }
-      const btn = p.logged
+      const btns = p.logged
         ? `<button class="trainbtn done" onclick="undoToday()">✓ Trained today — tap to undo</button>`
-        : `<button class="trainbtn" onclick="trainToday()">✓ I trained today</button>`;
+        : `<button class="trainbtn" onclick="trainToday()">✓ I trained today</button>
+           <button class="skipbtn" onclick="skipToday()">⤼ Skipped today</button>`;
       det.innerHTML=`
         <summary>
           <div class="sday">${DOW[d]} · Today</div>
@@ -634,8 +688,18 @@ function renderWeek(){
           </div>
           ${warn}
           ${exListHTML(p.key, p.loc)}
-          ${btn}
+          ${btns}
         </div>`;
+      wk.appendChild(det); continue;
+    }
+
+    // skipped past day
+    if(key==='skip'){
+      det.innerHTML=`<summary>
+          <div class="sday">${DOW[d]}</div>
+          <div class="stitle">Skipped <span class="pill rest">Skipped</span></div>
+          <div class="schev">▾</div></summary>
+        <div class="dbody"><label class="done-row"><input type="checkbox" checked onchange="toggleDone(${d},false)"> Marked skipped — untick to clear</label></div>`;
       wk.appendChild(det); continue;
     }
 
@@ -712,7 +776,13 @@ function renderProtein(){
   }else{
     log.innerHTML='<div class="item" style="border:none">No protein logged yet today.</div>';
   }
+  // recommendation
+  const w=S.weight||77; const lo=Math.round(1.6*w), hi=Math.round(2.2*w), rec=Math.round(2.0*w);
+  const rEl=document.getElementById('pRec');
+  if(rEl) rEl.innerHTML=`Recommended for muscle gain: <b>~${rec} g/day</b> (${lo}–${hi} g, ≈1.6–2.2 g per kg of bodyweight).`+
+    (S.goal!==rec?` <button class="applybtn" onclick="applyProteinRec()">Use ${rec} g</button>`:'');
 }
+function applyProteinRec(){ S.goal=Math.round(2.0*(S.weight||77)); save(); renderSetup(); renderProtein(); }
 function addProtein(g){
   const tk=todayKey(); if(!S.protein[tk])S.protein[tk]={total:0,items:[]};
   S.protein[tk].total+=g; S.protein[tk].items.push(g); save(); renderProtein();
@@ -749,7 +819,11 @@ function renderCreatine(){
   }else{
     log.innerHTML='<div class="item" style="border:none">No creatine logged yet today.</div>';
   }
+  const rEl=document.getElementById('cRec');
+  if(rEl) rEl.innerHTML='Recommended: <b>5 g/day</b> (3–5 g maintenance; no need to load).'+
+    ((S.cgoal!=null?S.cgoal:5)!==5?' <button class="applybtn" onclick="applyCreatineRec()">Use 5 g</button>':'');
 }
+function applyCreatineRec(){ S.cgoal=5; save(); renderSetup(); renderCreatine(); }
 function addCreatine(g){
   if(!S.creatine) S.creatine={};
   const tk=todayKey(); if(!S.creatine[tk])S.creatine[tk]={total:0,items:[]};
@@ -765,6 +839,58 @@ function delCreatine(i){
 }
 function setCGoal(v){ S.cgoal=parseFloat(v)||0; save(); renderCreatine(); }
 
+/* ============ VITAMINS ============ */
+function renderVitamins(){
+  if(!S.vit) S.vit={};
+  const tk=todayKey();
+  const lbl=document.getElementById('vTodayLabel');
+  if(lbl) lbl.textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+  const btn=document.getElementById('vBtn');
+  const took=!!S.vit[tk];
+  if(btn){ btn.textContent = took?'✓ Vitamins taken today — tap to undo':'✓ Took my vitamins today'; btn.className = took?'trainbtn done':'trainbtn'; }
+  const note=document.getElementById('vNote'); if(note) note.value=S.vitNote||'';
+  const rEl=document.getElementById('vRec');
+  if(rEl) rEl.innerHTML='Tip: take fat-soluble vitamins (D, Omega-3) with a meal that has some fat for better absorption. This is just a daily check — no dose tracking.';
+}
+function toggleVitamin(){ const tk=todayKey(); if(S.vit[tk]) delete S.vit[tk]; else S.vit[tk]=true; save(); renderVitamins(); }
+function setVitNote(v){ S.vitNote=v; save(); }
+
+/* ============ PHOTOS ============ */
+function addPhoto(file){
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const max=800; let {width:w,height:h}=img;
+      if(w>h && w>max){ h=Math.round(h*max/w); w=max; } else if(h>=w && h>max){ w=Math.round(w*max/h); h=max; }
+      const c=document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      const data=c.toDataURL('image/jpeg',0.6);
+      if(!S.photos) S.photos=[];
+      S.photos.push({d:todayKey(), img:data, ts:Date.now()});
+      try{ save(); }
+      catch(err){ S.photos.pop(); alert('Storage is full — delete a few older photos and try again.'); return; }
+      renderPhotos();
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+  document.getElementById('photoInput').value='';
+}
+function renderPhotos(){
+  const g=document.getElementById('gallery'); if(!g) return;
+  const ph=(S.photos||[]).slice().sort((a,b)=>(b.ts||0)-(a.ts||0));
+  if(ph.length===0){ g.innerHTML='<div class="foot">No photos yet. Add one to track your visual progress over time.</div>'; return; }
+  g.innerHTML = ph.map(p=>{
+    const idx=S.photos.indexOf(p);
+    return `<div class="gphoto"><img src="${p.img}" onclick="openPhoto(${idx})"><button class="gdel" onclick="delPhoto(${idx})">✕</button><div class="gdate">${p.d.slice(5)}</div></div>`;
+  }).join('');
+}
+function delPhoto(i){ if(!confirm('Delete this photo?'))return; S.photos.splice(i,1); save(); renderPhotos(); }
+function openPhoto(i){ const m=document.getElementById('photoModal'); document.getElementById('photoModalImg').src=S.photos[i].img; m.className='modal on'; }
+function closePhoto(){ document.getElementById('photoModal').className='modal'; }
+
 /* ============ PROGRESS ============ */
 function setPeriod(p){ S.period=p; save(); renderProgress(); }
 function renderProgress(){
@@ -779,7 +905,7 @@ function renderProgress(){
   let workouts=0, gymVisits=0, creatineDays=0; const pPct=[];
   dates.forEach(ds=>{
     const h=S.history[ds];
-    if(h){ workouts++; if(WORKOUTS[h.key] && WORKOUTS[h.key].gymDay && (h.loc||'gym')==='gym') gymVisits++; }
+    if(h && h.key!=='skip'){ workouts++; if(WORKOUTS[h.key] && WORKOUTS[h.key].gymDay && (h.loc||'gym')==='gym') gymVisits++; }
     const p=S.protein[ds]; if(p && goal>0) pPct.push(Math.min(100, p.total/goal*100));
     const c=S.creatine[ds]; if(c && c.total>=cgoal && cgoal>0) creatineDays++;
   });
@@ -797,15 +923,16 @@ function renderProgress(){
   document.getElementById('summaryGrid').innerHTML = tiles.map(t=>
     `<div class="sumtile"><div class="n">${t.n}</div><div class="l">${t.l}</div></div>`).join('');
 
-  // streak: consecutive days with a logged workout, ending today (or yesterday if today not done yet)
-  let streak=0, i=0; if(!S.history[iso(today)]) i=1;
-  for(;;i++){ if(S.history[iso(addDays(today,-i))]) streak++; else break; }
+  // streak: consecutive days with a real workout (skips don't count), ending today/yesterday
+  const trained=ds=>{ const h=S.history[ds]; return !!h && h.key!=='skip'; };
+  let streak=0, i=0; if(!trained(iso(today))) i=1;
+  for(;;i++){ if(trained(iso(addDays(today,-i)))) streak++; else break; }
   document.getElementById('streakNum').textContent=streak;
 
   // calendar: last 5 weeks, Mon-Sun
   const startMon=addDays(curMonday(),-28); let cal='';
   for(let k=0;k<35;k++){ const dt=addDays(startMon,k); const ds=iso(dt); const h=S.history[ds];
-    const cls = h? ((h.loc||'gym')==='gym'?'gym':'home') : '';
+    const cls = h ? (h.key==='skip'?'skip':((h.loc||'gym')==='gym'?'gym':'home')) : '';
     const tdy = ds===iso(today)?' today':'';
     cal+=`<div class="cell ${cls}${tdy}" title="${ds}"></div>`;
   }
@@ -849,6 +976,7 @@ function trainToday(){
   save(); renderWeek(); renderProgress();
 }
 function undoToday(){ const ds=dateStrOf(todayDow()); delete S.history[ds]; save(); renderWeek(); renderProgress(); }
+function skipToday(){ const ds=dateStrOf(todayDow()); S.history[ds]={key:'skip', loc:'skip'}; save(); renderWeek(); renderProgress(); }
 function toggleDone(d,c){
   const ds=dateStrOf(d); const map=buildPlan().map;
   if(c){ const key=map[d]; S.history[ds]={key, loc:(typeOfKey(key)==='gym'?'gym':'home')}; }
@@ -892,10 +1020,11 @@ function normalize(){
   if(S.age==null)S.age=42; if(S.height==null)S.height=182; if(S.weight==null)S.weight=77;
   if(S.wgoal==null)S.wgoal=80; if(!S.period)S.period='week';
   if(S.goal==null)S.goal=150; if(S.cgoal==null)S.cgoal=5; if(S.restDay==null)S.restDay=6;
+  if(!S.photos)S.photos=[]; if(!S.vit)S.vit={}; if(S.vitNote==null)S.vitNote='';
   // seed first weight point so the trend has a starting reference
   if(S.weights.length===0 && S.weight) S.weights.push({d:todayKey(), kg:S.weight});
 }
-function init(){ normalize(); renderProfile(); renderSetup(); renderWeek(); renderProtein(); renderCreatine(); renderProgress(); }
+function init(){ normalize(); renderProfile(); renderSetup(); renderWeek(); renderProtein(); renderCreatine(); renderVitamins(); renderPhotos(); renderProgress(); }
 init();
 </script>
 </body>
