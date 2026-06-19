@@ -197,16 +197,10 @@
       <h1>My 7-Day <span>Workout</span> Planner</h1>
       <div class="sub">6 days · 2 gym visits (Legs &amp; Back) · 4 home days (DB + bench) · Build-muscle</div>
     </div>
-    <div class="row" style="gap:8px">
-      <button class="btn" onclick="exportData()">⬇ Backup</button>
-      <button class="btn" onclick="document.getElementById('importFile').click()">⬆ Restore</button>
-      <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(this.files[0])">
-      <button class="btn" onclick="resetAll()">Reset</button>
-    </div>
   </header>
 
-  <!-- ===== WORKOUT TAB ===== -->
-  <div class="tab on" id="tab-workout">
+  <!-- ===== PROFILE TAB ===== -->
+  <div class="tab" id="tab-profile">
   <!-- PROFILE -->
   <section class="panel">
     <div class="profile">
@@ -227,6 +221,21 @@
     </div>
   </section>
 
+  <!-- DATA / BACKUP -->
+  <section class="panel">
+    <h2>Your data</h2>
+    <div class="row" style="gap:8px;flex-wrap:wrap">
+      <button class="btn" onclick="exportData()">⬇ Backup</button>
+      <button class="btn" onclick="document.getElementById('importFile').click()">⬆ Restore</button>
+      <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(this.files[0])">
+      <button class="btn" onclick="resetAll()">Reset all</button>
+    </div>
+    <div class="foot" style="text-align:left;margin-top:10px">Everything is saved privately on this device. <b>Backup</b> downloads a file (save it to iCloud Drive) — use <b>Restore</b> on a new phone to bring it all back.</div>
+  </section>
+  </div><!-- /profile tab -->
+
+  <!-- ===== WORKOUT TAB ===== -->
+  <div class="tab on" id="tab-workout">
   <!-- SETTINGS -->
   <section class="panel">
     <h2>Setup</h2>
@@ -391,11 +400,7 @@
     <input id="checkNote" type="text" placeholder="Notes — how did the week feel?" style="width:100%" onchange="setCheckNote(this.value)">
     <div class="recnote" id="checkHist"></div>
   </section>
-  </div><!-- /progress tab -->
-
-  <!-- ===== PHOTOS TAB ===== -->
-  <div class="tab" id="tab-photos">
-  <!-- PHOTOS -->
+  <!-- PHOTOS (inside Progress) -->
   <section class="panel">
     <h2>Progress Photos</h2>
     <label class="photobtn">+ Add photo
@@ -404,7 +409,7 @@
     <span class="foot" style="margin-left:10px">Stored privately on this device only.</span>
     <div class="gallery" id="gallery"></div>
   </section>
-  </div><!-- /photos tab -->
+  </div><!-- /progress tab -->
 
   <!-- photo viewer -->
   <div id="photoModal" class="modal" onclick="closePhoto()"><img id="photoModalImg" src=""></div>
@@ -426,7 +431,7 @@
   <button data-t="workout" class="on" onclick="showTab('workout')"><span class="ic">🏋️</span>Workout</button>
   <button data-t="nutrition" onclick="showTab('nutrition')"><span class="ic">🥗</span>Nutrition</button>
   <button data-t="progress" onclick="showTab('progress')"><span class="ic">📈</span>Progress</button>
-  <button data-t="photos" onclick="showTab('photos')"><span class="ic">📷</span>Photos</button>
+  <button data-t="profile" onclick="showTab('profile')"><span class="ic">👤</span>Profile</button>
 </nav>
 
 <script>
@@ -1106,8 +1111,10 @@ function importData(file){
 
 /* ============ TABS ============ */
 function showTab(name){
+  const tabs=['workout','nutrition','progress','profile'];
+  if(tabs.indexOf(name)<0) name='workout';
   S.tab=name; save();
-  ['workout','nutrition','progress','photos'].forEach(t=>{
+  tabs.forEach(t=>{
     const el=document.getElementById('tab-'+t); if(el) el.className='tab'+(t===name?' on':'');
   });
   document.querySelectorAll('#tabbar button').forEach(b=>{ b.className=(b.dataset.t===name?'on':''); });
