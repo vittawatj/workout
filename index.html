@@ -165,6 +165,29 @@
   .modal img{max-width:100%;max-height:100%;border-radius:10px}
   .gymwarn{font-size:12.5px;color:var(--gym);margin:4px 0 10px;padding:9px 11px;background:rgba(255,159,28,.12);border:1px solid rgba(255,159,28,.35);border-radius:10px;line-height:1.45}
   .stat .v input{border-bottom:1px solid var(--accent2)}
+  /* tabs */
+  body{padding-bottom:74px}
+  .tab{display:none}
+  .tab.on{display:block}
+  .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;background:rgba(20,22,28,.96);
+    backdrop-filter:blur(8px);border-top:1px solid var(--line)}
+  .tabbar button{flex:1;background:none;border:none;color:var(--muted);padding:9px 4px 10px;font-size:10.5px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px}
+  .tabbar button .ic{font-size:19px;line-height:1}
+  .tabbar button.on{color:var(--accent)}
+  /* rest timer widget */
+  .resttimer{position:fixed;right:14px;bottom:84px;z-index:41;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:var(--shadow);display:flex;align-items:center;gap:8px}
+  .resttimer .rt-disp{font-size:20px;font-weight:800;min-width:54px;text-align:center;font-variant-numeric:tabular-nums}
+  .resttimer .rt-disp.run{color:var(--accent2)}
+  .resttimer button{background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 9px;font-size:12px;font-weight:700}
+  .resttimer .rt-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;position:absolute;top:-8px;left:12px;background:var(--card);padding:0 4px}
+  /* rating buttons */
+  .rate{display:inline-flex;gap:6px}
+  .rate button{width:34px;height:34px;border-radius:9px;background:var(--card2);border:1px solid var(--line);color:var(--muted);font-weight:700}
+  .rate button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  /* per-exercise weight input */
+  .ex .wlog{width:58px;background:var(--card2);border:1px solid var(--line);border-radius:7px;color:var(--txt);font-size:12px;padding:3px 5px;text-align:center}
+  .ex .wwrap{display:flex;flex-direction:column;align-items:center;gap:1px}
+  .ex .wwrap small{font-size:8px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -182,6 +205,8 @@
     </div>
   </header>
 
+  <!-- ===== WORKOUT TAB ===== -->
+  <div class="tab on" id="tab-workout">
   <!-- PROFILE -->
   <section class="panel">
     <div class="profile">
@@ -246,8 +271,12 @@
     <div id="week" class="week"></div>
   </section>
 
+  </div><!-- /workout tab -->
+
+  <!-- ===== NUTRITION TAB ===== -->
+  <div class="tab" id="tab-nutrition">
   <!-- PROTEIN -->
-  <section class="panel" style="margin-top:18px">
+  <section class="panel">
     <h2>Protein today — <span id="todayLabel" style="color:var(--txt)"></span></h2>
     <div class="prot-top">
       <div class="ring-wrap">
@@ -302,6 +331,33 @@
     <div class="recnote" id="vRec" style="margin-top:10px"></div>
   </section>
 
+  <!-- WATER -->
+  <section class="panel">
+    <h2>Water today — <span id="wTodayLabel" style="color:var(--txt)"></span></h2>
+    <div class="prot-top">
+      <div class="ring-wrap">
+        <div class="pnum"><span id="waterMl">0</span><small>ml</small></div>
+        <div class="pgoal">of goal <b id="waterGoalLabel">0</b> ml · <span id="waterLeft">0</span> ml to go</div>
+      </div>
+    </div>
+    <div class="pbar"><i id="waterFill" style="background:linear-gradient(90deg,#4dabff,#37c871)"></i></div>
+    <div class="quick">
+      <button onclick="addWater(250)">+1 glass (250)</button>
+      <button onclick="addWater(500)">+ bottle (500)</button>
+      <button onclick="addWater(-250)">− undo</button>
+    </div>
+    <div class="recnote" id="waterRec"></div>
+  </section>
+  </div><!-- /nutrition tab -->
+
+  <!-- ===== PROGRESS TAB ===== -->
+  <div class="tab" id="tab-progress">
+  <!-- DELOAD -->
+  <section class="panel">
+    <h2>Recovery / Deload</h2>
+    <div id="deloadBanner" class="banner"></div>
+    <button class="btn" style="margin-top:10px" onclick="didDeload()">I did a deload week — reset counter</button>
+  </section>
   <!-- PROGRESS -->
   <section class="panel">
     <h2>Progress</h2>
@@ -327,6 +383,18 @@
     </div>
   </section>
 
+  <!-- WEEKLY CHECK-IN -->
+  <section class="panel">
+    <h2>Weekly check-in</h2>
+    <div style="margin-bottom:12px"><div class="ctl" style="margin-bottom:6px">Energy this week</div><div class="rate" id="rateEnergy"></div></div>
+    <div style="margin-bottom:12px"><div class="ctl" style="margin-bottom:6px">Soreness / fatigue</div><div class="rate" id="rateSore"></div></div>
+    <input id="checkNote" type="text" placeholder="Notes — how did the week feel?" style="width:100%" onchange="setCheckNote(this.value)">
+    <div class="recnote" id="checkHist"></div>
+  </section>
+  </div><!-- /progress tab -->
+
+  <!-- ===== PHOTOS TAB ===== -->
+  <div class="tab" id="tab-photos">
   <!-- PHOTOS -->
   <section class="panel">
     <h2>Progress Photos</h2>
@@ -336,12 +404,30 @@
     <span class="foot" style="margin-left:10px">Stored privately on this device only.</span>
     <div class="gallery" id="gallery"></div>
   </section>
+  </div><!-- /photos tab -->
 
   <!-- photo viewer -->
   <div id="photoModal" class="modal" onclick="closePhoto()"><img id="photoModalImg" src=""></div>
 
   <div class="foot">Everything saves automatically on this device. Bookmark this page or add it to your phone home screen.</div>
 </div>
+
+<!-- floating rest timer -->
+<div class="resttimer" id="restTimer">
+  <span class="rt-lbl">Rest</span>
+  <div class="rt-disp" id="rtDisp" onclick="stopRest()">0:00</div>
+  <button onclick="startRest(60)">60s</button>
+  <button onclick="startRest(90)">90s</button>
+  <button onclick="startRest(120)">2m</button>
+</div>
+
+<!-- bottom tab bar -->
+<nav class="tabbar" id="tabbar">
+  <button data-t="workout" class="on" onclick="showTab('workout')"><span class="ic">🏋️</span>Workout</button>
+  <button data-t="nutrition" onclick="showTab('nutrition')"><span class="ic">🥗</span>Nutrition</button>
+  <button data-t="progress" onclick="showTab('progress')"><span class="ic">📈</span>Progress</button>
+  <button data-t="photos" onclick="showTab('photos')"><span class="ic">📷</span>Photos</button>
+</nav>
 
 <script>
 /* ============ DATA: muscle map SVG ============ */
@@ -488,7 +574,8 @@ function load(){
   try{ const d=JSON.parse(localStorage.getItem(KEY)); if(d) return d; }catch(e){}
   return { restDay:6 /*Sunday*/, goal:150, cgoal:5, age:42, height:182, weight:77, wgoal:80,
            loc:{}, history:{}, weights:[], protein:{}, creatine:{}, period:'week',
-           photos:[], vit:{}, vitNote:'' };
+           photos:[], vit:{}, vitNote:'',
+           water:{}, waterGoal:2700, deloadStart:null, checkins:{}, lifts:{}, tab:'workout' };
 }
 function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
 // local-date helpers (avoid UTC offset bugs)
@@ -615,19 +702,23 @@ function renderSetup(){
   document.getElementById('creatineGoal').value=(S.cgoal!=null?S.cgoal:5);
 }
 
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 function exListHTML(key, loc){
-  const w=WORKOUTS[key]; let html='';
+  const w=WORKOUTS[key]; let html=''; const lifts=S.lifts||{};
   w.exercises.forEach((e)=>{
     const showGym = loc==='gym';
     const nm = showGym? e.gym : e.home;
+    const last = lifts[nm]||'';
     html+=`<div class="ex">
       <div class="thumb">${bodySVG(e.parts)}</div>
       <div class="info"><div class="nm">${nm}</div><div class="sr">${e.sr}</div></div>
-      <a class="yt" href="${yt(showGym? e.gym : e.home)}" target="_blank">▶ video</a>
+      <div class="wwrap"><input class="wlog" inputmode="decimal" placeholder="kg" value="${esc(last)}" data-ex="${esc(nm)}" onchange="setLift(this)"><small>last</small></div>
+      <a class="yt" href="${yt(showGym? e.gym : e.home)}" target="_blank">▶</a>
     </div>`;
   });
   return html;
 }
+function setLift(el){ if(!S.lifts)S.lifts={}; const v=el.value.trim(); const k=el.dataset.ex; if(v) S.lifts[k]=v; else delete S.lifts[k]; save(); }
 function renderWeek(){
   const plan=buildPlan(); const map=plan.map; const wk=document.getElementById('week'); wk.innerHTML='';
   const td=todayDow();
@@ -1013,6 +1104,73 @@ function importData(file){
   r.readAsText(file);
 }
 
+/* ============ TABS ============ */
+function showTab(name){
+  S.tab=name; save();
+  ['workout','nutrition','progress','photos'].forEach(t=>{
+    const el=document.getElementById('tab-'+t); if(el) el.className='tab'+(t===name?' on':'');
+  });
+  document.querySelectorAll('#tabbar button').forEach(b=>{ b.className=(b.dataset.t===name?'on':''); });
+  window.scrollTo(0,0);
+}
+
+/* ============ REST TIMER ============ */
+let _rt=null, _rtLeft=0;
+function fmt(s){ const m=Math.floor(s/60); return m+':'+String(s%60).padStart(2,'0'); }
+function startRest(sec){
+  clearInterval(_rt); _rtLeft=sec;
+  const disp=document.getElementById('rtDisp'); disp.classList.add('run'); disp.textContent=fmt(_rtLeft);
+  _rt=setInterval(()=>{
+    _rtLeft--; disp.textContent=fmt(Math.max(0,_rtLeft));
+    if(_rtLeft<=0){ clearInterval(_rt); _rt=null; disp.classList.remove('run');
+      try{ if(navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){} disp.textContent='Done'; setTimeout(()=>{disp.textContent='0:00';},2500); }
+  },1000);
+}
+function stopRest(){ clearInterval(_rt); _rt=null; const d=document.getElementById('rtDisp'); d.classList.remove('run'); d.textContent='0:00'; }
+
+/* ============ WATER ============ */
+function renderWater(){
+  if(!S.water)S.water={};
+  const tk=todayKey(); const ml=S.water[tk]||0; const goal=S.waterGoal||2700;
+  const lbl=document.getElementById('wTodayLabel'); if(lbl) lbl.textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+  document.getElementById('waterMl').textContent=ml;
+  document.getElementById('waterGoalLabel').textContent=goal;
+  document.getElementById('waterLeft').textContent=Math.max(0,goal-ml);
+  document.getElementById('waterFill').style.width=(goal>0?Math.min(100,Math.round(ml/goal*100)):0)+'%';
+  const rEl=document.getElementById('waterRec');
+  if(rEl) rEl.innerHTML=`Recommended: <b>~${goal} ml/day</b> (≈35 ml per kg). Add more on training days and hot weather.`;
+}
+function addWater(ml){ const tk=todayKey(); S.water[tk]=Math.max(0,(S.water[tk]||0)+ml); save(); renderWater(); }
+
+/* ============ DELOAD ============ */
+function weeksSinceDeload(){ const start=new Date((S.deloadStart||todayKey())+'T00:00:00'); return Math.floor((new Date()-start)/(7*864e5)); }
+function renderDeload(){
+  const wks=weeksSinceDeload(); const b=document.getElementById('deloadBanner'); if(!b)return;
+  if(wks>=8){ b.className='banner warn';
+    b.innerHTML=`⚠️ It\'s been <b>${wks} weeks</b> since your last deload. At 42, a lighter week (~half the sets, lighter weight) now will protect your joints and refresh your progress. Take it this week, then tap the button below.`;
+  }else{ b.className='banner ok';
+    b.innerHTML=`✅ <b>${wks} of ~8 weeks</b> since last deload. Keep pushing — I\'ll flag when a deload week is due (helps recovery and steady gains).`;
+  }
+}
+function didDeload(){ S.deloadStart=todayKey(); save(); renderDeload(); }
+
+/* ============ WEEKLY CHECK-IN ============ */
+function weekKeyStr(){ return iso(curMonday()); }
+function renderCheckin(){
+  const wk=weekKeyStr(); const c=(S.checkins&&S.checkins[wk])||{energy:0,sore:0,note:''};
+  const eWrap=document.getElementById('rateEnergy'), sWrap=document.getElementById('rateSore');
+  if(eWrap) eWrap.innerHTML=[1,2,3,4,5].map(n=>`<button class="${c.energy===n?'on':''}" onclick="setRate('energy',${n})">${n}</button>`).join('');
+  if(sWrap) sWrap.innerHTML=[1,2,3,4,5].map(n=>`<button class="${c.sore===n?'on':''}" onclick="setRate('sore',${n})">${n}</button>`).join('');
+  const note=document.getElementById('checkNote'); if(note) note.value=c.note||'';
+  // history (last 4 weeks)
+  const hist=document.getElementById('checkHist');
+  if(hist){ const ks=Object.keys(S.checkins||{}).sort().reverse().slice(0,4);
+    hist.innerHTML = ks.length? ('Recent: '+ks.map(k=>{const v=S.checkins[k];return `<span style="white-space:nowrap">${k.slice(5)}: ⚡${v.energy||'–'}/😮‍💨${v.sore||'–'}</span>`}).join(' · ')) : 'Rate each week to spot energy/recovery patterns over time.';
+  }
+}
+function setRate(field,n){ const wk=weekKeyStr(); if(!S.checkins)S.checkins={}; if(!S.checkins[wk])S.checkins[wk]={energy:0,sore:0,note:''}; S.checkins[wk][field]=n; save(); renderCheckin(); }
+function setCheckNote(v){ const wk=weekKeyStr(); if(!S.checkins)S.checkins={}; if(!S.checkins[wk])S.checkins[wk]={energy:0,sore:0,note:''}; S.checkins[wk].note=v; save(); }
+
 /* ============ INIT ============ */
 function normalize(){
   if(!S.history)S.history={}; if(!S.weights)S.weights=[]; if(!S.loc)S.loc={};
@@ -1021,10 +1179,19 @@ function normalize(){
   if(S.wgoal==null)S.wgoal=80; if(!S.period)S.period='week';
   if(S.goal==null)S.goal=150; if(S.cgoal==null)S.cgoal=5; if(S.restDay==null)S.restDay=6;
   if(!S.photos)S.photos=[]; if(!S.vit)S.vit={}; if(S.vitNote==null)S.vitNote='';
+  if(!S.water)S.water={}; if(S.waterGoal==null)S.waterGoal=Math.round((S.weight||77)*35/100)*100;
+  if(!S.deloadStart)S.deloadStart=todayKey(); if(!S.checkins)S.checkins={}; if(!S.lifts)S.lifts={};
+  if(!S.tab)S.tab='workout';
   // seed first weight point so the trend has a starting reference
   if(S.weights.length===0 && S.weight) S.weights.push({d:todayKey(), kg:S.weight});
 }
-function init(){ normalize(); renderProfile(); renderSetup(); renderWeek(); renderProtein(); renderCreatine(); renderVitamins(); renderPhotos(); renderProgress(); }
+function init(){
+  normalize();
+  renderProfile(); renderSetup(); renderWeek();
+  renderProtein(); renderCreatine(); renderVitamins(); renderWater();
+  renderDeload(); renderProgress(); renderCheckin(); renderPhotos();
+  showTab(S.tab||'workout');
+}
 init();
 </script>
 </body>
