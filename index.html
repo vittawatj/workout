@@ -188,6 +188,15 @@
   .ex .wlog{width:58px;background:var(--card2);border:1px solid var(--line);border-radius:7px;color:var(--txt);font-size:12px;padding:3px 5px;text-align:center}
   .ex .wwrap{display:flex;flex-direction:column;align-items:center;gap:1px}
   .ex .wwrap small{font-size:8px;color:var(--muted)}
+  .ex .thumb{cursor:pointer}
+  /* exercise quick-look sheet */
+  .exsheet{background:var(--card);border:1px solid var(--line);border-radius:18px;max-width:380px;width:100%;padding:20px;position:relative;text-align:center}
+  .exclose{position:absolute;top:10px;right:12px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer}
+  .exsheet .extitle{font-size:18px;font-weight:800;margin:4px 16px 2px}
+  .exsheet .exsr{font-size:13px;color:var(--accent);font-weight:700;margin-bottom:10px}
+  .exsheet svg{margin:6px auto}
+  .exsheet .exmuscles{font-size:12px;color:var(--muted);margin-top:8px}
+  .exsheet .exvid{display:inline-block;margin-top:14px;background:var(--accent);color:#fff;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:700;text-decoration:none}
 </style>
 </head>
 <body>
@@ -243,6 +252,10 @@
       <div>
         <label class="ctl">Rest day &nbsp;</label>
         <select id="restDay" onchange="setRest(this.value)"></select>
+      </div>
+      <div>
+        <label class="ctl">Usual gym day &nbsp;</label>
+        <select id="gymDaySel" onchange="setGymDay(this.value)"></select>
       </div>
       <div>
         <label class="ctl">Daily protein goal (g) &nbsp;</label>
@@ -414,6 +427,14 @@
   <!-- photo viewer -->
   <div id="photoModal" class="modal" onclick="closePhoto()"><img id="photoModalImg" src=""></div>
 
+  <!-- exercise quick-look -->
+  <div id="exModal" class="modal" onclick="closeExercise()">
+    <div class="exsheet" onclick="event.stopPropagation()">
+      <button class="exclose" onclick="closeExercise()">✕</button>
+      <div id="exModalBody"></div>
+    </div>
+  </div>
+
   <div class="foot">Everything saves automatically on this device. Bookmark this page or add it to your phone home screen.</div>
 </div>
 
@@ -436,11 +457,12 @@
 
 <script>
 /* ============ DATA: muscle map SVG ============ */
-function bodySVG(parts){
+function bodySVG(parts, w, h){
   // parts: array of tokens to highlight
   const on = t => parts.includes(t) ? 'var(--accent)' : '#3a3f4a';
+  w=w||78; h=h||60;
   // two small figures: front + back, 110x150 viewBox
-  return `<svg width="78" height="60" viewBox="0 0 220 150" xmlns="http://www.w3.org/2000/svg">
+  return `<svg width="${w}" height="${h}" viewBox="0 0 220 150" xmlns="http://www.w3.org/2000/svg">
    <!-- FRONT -->
    <g>
     <circle cx="50" cy="18" r="11" fill="#3a3f4a"/>
@@ -510,7 +532,8 @@ const WORKOUTS = {
       ex("Incline DB Press","Incline Barbell Press","3 × 10-12",["chest","shoulders"]),
       ex("DB Fly (on bench)","Cable Fly / Pec Deck","3 × 12-15",["chest"]),
       ex("Overhead DB Triceps Extension","Cable Overhead Extension","3 × 10-12",["triceps"]),
-      ex("DB Skull Crusher (on bench)","Rope Pushdown","3 × 10-12",["triceps"])
+      ex("DB Skull Crusher (on bench)","Rope Pushdown","3 × 10-12",["triceps"]),
+      ex("Plank — core finisher","Plank","3 × 30-45 sec",["abs"],"plank exercise")
     ]
   },
   shBi: {
@@ -554,7 +577,8 @@ const WORKOUTS = {
       ex("DB Hammer Curl","Rope Hammer Curl","3 × 10-12",["biceps"]),
       ex("DB Incline Curl (on bench)","Cable Curl","3 × 10-12",["biceps"]),
       ex("DB Lateral Raise","Cable Lateral Raise","4 × 12-20",["shoulders"]),
-      ex("DB Rear-Delt Fly (on bench)","Reverse Pec Deck","3 × 15-20",["shoulders"])
+      ex("DB Rear-Delt Fly (on bench)","Reverse Pec Deck","3 × 15-20",["shoulders"]),
+      ex("Lying Leg Raise — core finisher","Hanging Leg Raise","3 × 12-15",["abs"],"lying leg raise")
     ]
   }
 };
@@ -580,7 +604,7 @@ function load(){
   return { restDay:6 /*Sunday*/, goal:150, cgoal:5, age:42, height:182, weight:77, wgoal:80,
            loc:{}, history:{}, weights:[], protein:{}, creatine:{}, period:'week',
            photos:[], vit:{}, vitNote:'',
-           water:{}, waterGoal:2700, deloadStart:null, checkins:{}, lifts:{}, tab:'workout' };
+           water:{}, waterGoal:2700, deloadStart:null, checkins:{}, lifts:{}, tab:'workout', gymDay:6 };
 }
 function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
 // local-date helpers (avoid UTC offset bugs)
@@ -607,8 +631,13 @@ function buildPlan(){
   let gymCount=0; days.forEach(d=>{ if(comp[d] && comp[d].type==='gym') gymCount++; });
   const rank={gym:0,chest:1,biceps:2};
   const typeMap={};
+  // honor a preferred "usual gym day" — reserve a gym session there
+  if(S.gymDay!=null && S.gymDay!==rest && !comp[S.gymDay] && target.gym>0){
+    typeMap[S.gymDay]='gym'; target.gym--; gymCount++;
+  }
   days.forEach(d=>{
     if(comp[d]){ typeMap[d]=comp[d].type; return; }
+    if(typeMap[d]) return;   // already reserved (preferred gym day)
     const pd=(d-1+7)%7;
     const prev=(pd===rest)?null:(typeMap[pd] || (comp[pd]&&comp[pd].type) || null);
     let cands=['gym','chest','biceps'].filter(t=>target[t]>0);
@@ -633,7 +662,11 @@ function buildPlan(){
   days.forEach(d=>{
     if(comp[d]){ map[d]=comp[d].key; if(comp[d].type==='gym') gymSeen++; return; }
     const t=typeMap[d];
-    if(t==='gym'){ map[d]=(gymSeen%2===0)?'gymA':'gymB'; gymSeen++; }
+    if(t==='gym'){
+      if(S.gymDay!=null) map[d]=(d===S.gymDay)?'gymA':'gymB';   // preferred day = leg-priority
+      else { map[d]=(gymSeen%2===0)?'gymA':'gymB'; }
+      gymSeen++;
+    }
     else map[d]=HOME_KEY[t]||'chestTri';
   });
   return {map, typeMap, target};
@@ -703,8 +736,16 @@ function setLeanGoal(v){ const g=parseFloat(v); if(!g) return; S.wgoal=g; save()
 function renderSetup(){
   const sel=document.getElementById('restDay'); sel.innerHTML='';
   DOW.forEach((d,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=d; if(i===S.restDay)o.selected=true; sel.appendChild(o); });
+  const gsel=document.getElementById('gymDaySel');
+  if(gsel){ gsel.innerHTML='<option value="-1">No fixed day</option>'+DOW.map((d,i)=>`<option value="${i}" ${S.gymDay===i?'selected':''}>${d}</option>`).join(''); }
   document.getElementById('proteinGoal').value=S.goal;
   document.getElementById('creatineGoal').value=(S.cgoal!=null?S.cgoal:5);
+}
+function setGymDay(v){
+  const n=parseInt(v,10);
+  S.gymDay = (n<0)?null:n;
+  if(S.gymDay!=null && S.gymDay===S.restDay) S.restDay=(S.gymDay+3)%7;  // resolve conflict
+  save(); renderSetup(); renderWeek();
 }
 
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
@@ -714,11 +755,12 @@ function exListHTML(key, loc){
     const showGym = loc==='gym';
     const nm = showGym? e.gym : e.home;
     const last = lifts[nm]||'';
+    const vq = showGym? e.gym : e.home;
     html+=`<div class="ex">
-      <div class="thumb">${bodySVG(e.parts)}</div>
+      <div class="thumb" onclick="showExercise(this)" data-parts="${esc(e.parts.join(','))}" data-nm="${esc(nm)}" data-sr="${esc(e.sr)}" data-q="${esc(vq)}">${bodySVG(e.parts)}</div>
       <div class="info"><div class="nm">${nm}</div><div class="sr">${e.sr}</div></div>
       <div class="wwrap"><input class="wlog" inputmode="decimal" placeholder="kg" value="${esc(last)}" data-ex="${esc(nm)}" onchange="setLift(this)"><small>last</small></div>
-      <a class="yt" href="${yt(showGym? e.gym : e.home)}" target="_blank">▶</a>
+      <a class="yt" href="${yt(vq)}" target="_blank">▶</a>
     </div>`;
   });
   return html;
@@ -815,6 +857,7 @@ function renderWeek(){
         <div class="focus" style="margin-bottom:8px">${w.focus} · <span style="opacity:.7">flexible — adapts to what you actually train</span></div>
         ${exListHTML(key, loc)}
         <label class="done-row"><input type="checkbox" ${done?'checked':''} onchange="toggleDone(${d},this.checked)"> Mark done</label>
+        ${done?'':`<button class="skipbtn" style="margin-top:8px" onclick="skipDay(${d})">⤼ Mark this day skipped</button>`}
       </div>`;
     wk.appendChild(det);
   }
@@ -875,8 +918,9 @@ function renderProtein(){
   // recommendation
   const w=S.weight||77; const lo=Math.round(1.6*w), hi=Math.round(2.2*w), rec=Math.round(2.0*w);
   const rEl=document.getElementById('pRec');
-  if(rEl) rEl.innerHTML=`Recommended for muscle gain: <b>~${rec} g/day</b> (${lo}–${hi} g, ≈1.6–2.2 g per kg of bodyweight).`+
-    (S.goal!==rec?` <button class="applybtn" onclick="applyProteinRec()">Use ${rec} g</button>`:'');
+  if(rEl) rEl.innerHTML=`Recommended for muscle gain: <b>~${rec} g/day</b> (${lo}–${hi} g, ≈1.6–2.2 g per kg).`+
+    (S.goal!==rec?` <button class="applybtn" onclick="applyProteinRec()">Use ${rec} g</button>`:'')+
+    `<br><b>When to take whey:</b> any time that helps you reach the daily total. A scoop within ~2 h around your workout (before or after) is a good default, but total daily protein matters far more than exact timing.`;
 }
 function applyProteinRec(){ S.goal=Math.round(2.0*(S.weight||77)); save(); renderSetup(); renderProtein(); }
 function addProtein(g){
@@ -917,7 +961,8 @@ function renderCreatine(){
   }
   const rEl=document.getElementById('cRec');
   if(rEl) rEl.innerHTML='Recommended: <b>5 g/day</b> (3–5 g maintenance; no need to load).'+
-    ((S.cgoal!=null?S.cgoal:5)!==5?' <button class="applybtn" onclick="applyCreatineRec()">Use 5 g</button>':'');
+    ((S.cgoal!=null?S.cgoal:5)!==5?' <button class="applybtn" onclick="applyCreatineRec()">Use 5 g</button>':'')+
+    '<br><b>When to take creatine:</b> any time of day — daily consistency is all that matters, not timing. Take it whenever you\'ll remember (post-workout or with a meal is convenient). Stir into water/shake; stay well hydrated.';
 }
 function applyCreatineRec(){ S.cgoal=5; save(); renderSetup(); renderCreatine(); }
 function addCreatine(g){
@@ -946,7 +991,7 @@ function renderVitamins(){
   if(btn){ btn.textContent = took?'✓ Vitamins taken today — tap to undo':'✓ Took my vitamins today'; btn.className = took?'trainbtn done':'trainbtn'; }
   const note=document.getElementById('vNote'); if(note) note.value=S.vitNote||'';
   const rEl=document.getElementById('vRec');
-  if(rEl) rEl.innerHTML='Tip: take fat-soluble vitamins (D, Omega-3) with a meal that has some fat for better absorption. This is just a daily check — no dose tracking.';
+  if(rEl) rEl.innerHTML='<b>When to take:</b> with your largest meal of the day (morning or lunch). Fat-soluble ones — Vitamin D, Omega-3, Vitamin E/A/K — absorb much better with some dietary fat. This is just a daily check — no dose tracking.';
 }
 function toggleVitamin(){ const tk=todayKey(); if(S.vit[tk]) delete S.vit[tk]; else S.vit[tk]=true; save(); renderVitamins(); }
 function setVitNote(v){ S.vitNote=v; save(); }
@@ -986,6 +1031,22 @@ function renderPhotos(){
 function delPhoto(i){ if(!confirm('Delete this photo?'))return; S.photos.splice(i,1); save(); renderPhotos(); }
 function openPhoto(i){ const m=document.getElementById('photoModal'); document.getElementById('photoModalImg').src=S.photos[i].img; m.className='modal on'; }
 function closePhoto(){ document.getElementById('photoModal').className='modal'; }
+
+/* ============ EXERCISE QUICK-LOOK ============ */
+const MUSCLE_LABEL={chest:'Chest',back:'Back / lats',shoulders:'Shoulders',biceps:'Biceps',triceps:'Triceps',quads:'Quads',hams:'Hamstrings',glutes:'Glutes',calves:'Calves',traps:'Upper back',abs:'Abs / core'};
+function showExercise(el){
+  const parts=(el.dataset.parts||'').split(',').filter(Boolean);
+  const nm=el.dataset.nm||'', sr=el.dataset.sr||'', q=el.dataset.q||nm;
+  const names=parts.map(p=>MUSCLE_LABEL[p]||p).join(' · ');
+  document.getElementById('exModalBody').innerHTML=`
+    <div class="extitle">${nm}</div>
+    <div class="exsr">${sr}</div>
+    ${bodySVG(parts,280,191)}
+    <div class="exmuscles">Targets: <b style="color:var(--txt)">${names||'full body'}</b></div>
+    <a class="exvid" href="${yt(q)}" target="_blank">▶ Watch form video</a>`;
+  document.getElementById('exModal').className='modal on';
+}
+function closeExercise(){ document.getElementById('exModal').className='modal'; }
 
 /* ============ PROGRESS ============ */
 function setPeriod(p){ S.period=p; save(); renderProgress(); }
@@ -1073,6 +1134,7 @@ function trainToday(){
 }
 function undoToday(){ const ds=dateStrOf(todayDow()); delete S.history[ds]; save(); renderWeek(); renderProgress(); }
 function skipToday(){ const ds=dateStrOf(todayDow()); S.history[ds]={key:'skip', loc:'skip'}; save(); renderWeek(); renderProgress(); }
+function skipDay(d){ const ds=dateStrOf(d); S.history[ds]={key:'skip', loc:'skip'}; save(); renderWeek(); renderProgress(); }
 function toggleDone(d,c){
   const ds=dateStrOf(d); const map=buildPlan().map;
   if(c){ const key=map[d]; S.history[ds]={key, loc:(typeOfKey(key)==='gym'?'gym':'home')}; }
@@ -1190,6 +1252,9 @@ function normalize(){
   if(!S.water)S.water={}; if(S.waterGoal==null)S.waterGoal=Math.round((S.weight||77)*35/100)*100;
   if(!S.deloadStart)S.deloadStart=todayKey(); if(!S.checkins)S.checkins={}; if(!S.lifts)S.lifts={};
   if(!S.tab)S.tab='workout';
+  if(S.gymDay===undefined)S.gymDay=6;   // default: usual gym day = Sunday (legs)
+  // a day can't be both rest and gym — if they collide, shift rest mid-week
+  if(S.gymDay!=null && S.gymDay===S.restDay) S.restDay=(S.gymDay+3)%7;
   // seed first weight point so the trend has a starting reference
   if(S.weights.length===0 && S.weight) S.weights.push({d:todayKey(), kg:S.weight});
 }
