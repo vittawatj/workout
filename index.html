@@ -228,7 +228,7 @@
   <header class="top">
     <div>
       <h1>My 7-Day <span>Workout</span> Planner</h1>
-      <div class="sub">6 training days · 2× Legs &amp; Back · every day flips Gym ⇄ Home (DB + bench) · Build-muscle</div>
+      <div class="sub">5–6 training days · 2× Legs &amp; Back · every day flips Gym ⇄ Home (DB + bench) · Build-muscle</div>
     </div>
   </header>
 
@@ -276,6 +276,10 @@
       <div>
         <label class="ctl">Rest day &nbsp;</label>
         <select id="restDay" onchange="setRest(this.value)"></select>
+      </div>
+      <div>
+        <label class="ctl">2nd rest day &nbsp;</label>
+        <select id="restDay2" onchange="setRest2(this.value)"></select>
       </div>
       <div>
         <label class="ctl">Usual gym day &nbsp;</label>
@@ -641,6 +645,7 @@ function curMonday(){ const d=new Date(); const wd=(d.getDay()+6)%7; const m=add
 function dateStrOf(dayIdx){ return iso(addDays(curMonday(), dayIdx)); }   // date of weekday in current week
 function todayKey(){ return iso(new Date()); }
 function todayDow(){ return (new Date().getDay()+6)%7; } // 0=Mon
+function isRest(d){ return d===S.restDay || (S.restDay2!=null && d===S.restDay2); }
 
 /* build schedule: map each weekday(0-6) -> workout key or 'rest' */
 /* Adaptive weekly planner.
@@ -648,8 +653,7 @@ function todayDow(){ return (new Date().getDay()+6)%7; } // 0=Mon
    session type two days running (muscle recovery) · re-plans around whatever
    you've actually logged this week. */
 function buildPlan(){
-  const rest=S.restDay;
-  const days=[]; for(let d=0; d<7; d++) if(d!==rest) days.push(d);
+  const days=[]; for(let d=0; d<7; d++) if(!isRest(d)) days.push(d);
   const comp={};                              // completed days this week -> {type,key}
   days.forEach(d=>{ const h=S.history[dateStrOf(d)]; if(h) comp[d]={type:typeOfKey(h.key), key:h.key}; });
   const target={gym:2, chest:2, biceps:2};    // weekly goal
@@ -659,7 +663,7 @@ function buildPlan(){
   const rank={gym:0,chest:1,biceps:2};
   const typeMap={};
   // honor a preferred "usual gym day" — reserve a gym session there
-  if(S.gymDay!=null && S.gymDay!==rest && !comp[S.gymDay] && target.gym>0){
+  if(S.gymDay!=null && !isRest(S.gymDay) && !comp[S.gymDay] && target.gym>0){
     typeMap[S.gymDay]='gym'; target.gym--; gymCount++;
   }
   days.forEach(d=>{
@@ -667,7 +671,7 @@ function buildPlan(){
     if(typeMap[d]) return;   // already reserved (preferred gym day)
     let prev=null;
     if(d===0){ const h=S.history[iso(addDays(curMonday(),-1))]; prev=h?typeOfKey(h.key):null; }  // Monday looks at last week's Sunday
-    else { const pd=d-1; prev=(pd===rest)?null:(typeMap[pd] || (comp[pd]&&comp[pd].type) || null); }
+    else { const pd=d-1; prev=isRest(pd)?null:(typeMap[pd] || (comp[pd]&&comp[pd].type) || null); }
     let cands=['gym','chest','biceps'].filter(t=>target[t]>0);
     if(cands.length===0) cands=['chest','biceps'];          // bonus home days once targets met
     cands=cands.filter(t=>{
@@ -686,7 +690,8 @@ function buildPlan(){
     if(pick==='gym') gymCount++;
   });
   // map types → keys (alternate gym A/B in day order; keep logged keys as-is)
-  const map={}; map[rest]='rest'; let gymSeen=0;
+  const map={}; for(let d=0; d<7; d++) if(isRest(d)) map[d]='rest';
+  let gymSeen=0;
   days.forEach(d=>{
     if(comp[d]){ map[d]=comp[d].key; if(comp[d].type==='gym') gymSeen++; return; }
     const t=typeMap[d];
@@ -699,16 +704,16 @@ function buildPlan(){
   });
   return {map, typeMap, target};
 }
-function gymVariantThisWeek(){ const rest=S.restDay; let n=0;
-  for(let d=0;d<7;d++){ if(d===rest)continue; const h=S.history[dateStrOf(d)]; if(h&&typeOfKey(h.key)==='gym') n++; }
+function gymVariantThisWeek(){ let n=0;
+  for(let d=0;d<7;d++){ if(isRest(d))continue; const h=S.history[dateStrOf(d)]; if(h&&typeOfKey(h.key)==='gym') n++; }
   return n%2===0?'gymA':'gymB'; }
-function gymsThisWeek(){ const rest=S.restDay; let n=0;
-  for(let d=0;d<7;d++){ if(d===rest)continue; const h=S.history[dateStrOf(d)]; if(h&&typeOfKey(h.key)==='gym') n++; }
+function gymsThisWeek(){ let n=0;
+  for(let d=0;d<7;d++){ if(isRest(d))continue; const h=S.history[dateStrOf(d)]; if(h&&typeOfKey(h.key)==='gym') n++; }
   return n; }
 // what TODAY should show, honoring the user's Home/Gym choice
 function todayPick(){
   const today=todayDow(); const ds=dateStrOf(today);
-  if(today===S.restDay) return {rest:true};
+  if(isRest(today)) return {rest:true};
   const logged=S.history[ds];
   if(logged) return {key:logged.key, loc:logged.loc, logged:true};
   const plan=buildPlan(); const planType=plan.typeMap[today];
@@ -761,6 +766,8 @@ function setLeanGoal(v){ const g=parseFloat(v); if(!g) return; S.wgoal=g; save()
 function renderSetup(){
   const sel=document.getElementById('restDay'); sel.innerHTML='';
   DOW.forEach((d,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=d; if(i===S.restDay)o.selected=true; sel.appendChild(o); });
+  const sel2=document.getElementById('restDay2');
+  if(sel2){ sel2.innerHTML='<option value="-1">None (6-day week)</option>'+DOW.map((d,i)=>`<option value="${i}" ${S.restDay2===i?'selected':''}>${d}</option>`).join(''); }
   const gsel=document.getElementById('gymDaySel');
   if(gsel){ gsel.innerHTML='<option value="-1">No fixed day</option>'+DOW.map((d,i)=>`<option value="${i}" ${S.gymDay===i?'selected':''}>${d}</option>`).join(''); }
   document.getElementById('proteinGoal').value=S.goal;
@@ -770,6 +777,8 @@ function setGymDay(v){
   const n=parseInt(v,10);
   S.gymDay = (n<0)?null:n;
   if(S.gymDay!=null && S.gymDay===S.restDay) S.restDay=(S.gymDay+3)%7;  // resolve conflict
+  if(S.gymDay!=null && S.restDay2!=null && S.gymDay===S.restDay2) S.restDay2=null;
+  if(S.restDay2===S.restDay) S.restDay2=null;
   save(); renderSetup(); renderWeek();
 }
 
@@ -858,7 +867,7 @@ function renderWeek(){
       const isGymType = typeOfKey(p.key)==='gym';
       let warn='';
       if(!p.logged && isGymType){
-        const yda=(d-1+7)%7; const ydH = (yda!==S.restDay) && S.history[dateStrOf(yda)] && typeOfKey(S.history[dateStrOf(yda)].key)==='gym';
+        const yda=(d-1+7)%7; const ydH = !isRest(yda) && S.history[dateStrOf(yda)] && typeOfKey(S.history[dateStrOf(yda)].key)==='gym';
         if(gymsThisWeek()>=2) warn='<div class="gymwarn">You\'ve already done 2 Legs·Back·Shoulders sessions this week — an easier day is better for recovery, but your call.</div>';
         else if(ydH) warn='<div class="gymwarn">You trained legs/back/shoulders yesterday — give them a rest day before hitting them again.</div>';
       }
@@ -933,7 +942,7 @@ function renderGymStatus(){
   // completed Legs·Back·Shoulders sessions this week, either location
   const sess=[];
   for(let d=0; d<7; d++){
-    if(d===S.restDay) continue;
+    if(isRest(d)) continue;
     const h=S.history[dateStrOf(d)];
     if(h && typeOfKey(h.key)==='gym') sess.push(h.loc||'gym');
   }
@@ -1277,7 +1286,18 @@ function renderSession(){
 }
 
 /* ============ ACTIONS ============ */
-function setRest(v){ S.restDay=parseInt(v,10); save(); renderWeek(); }
+function setRest(v){
+  S.restDay=parseInt(v,10);
+  if(S.restDay2===S.restDay) S.restDay2=null;              // can't rest twice on the same day
+  if(S.gymDay!=null && S.gymDay===S.restDay) S.gymDay=null; // latest choice wins
+  save(); renderSetup(); renderWeek();
+}
+function setRest2(v){
+  const n=parseInt(v,10);
+  S.restDay2=(n<0||n===S.restDay)?null:n;
+  if(S.gymDay!=null && S.gymDay===S.restDay2) S.gymDay=null;
+  save(); renderSetup(); renderWeek();
+}
 function setGoal(v){ S.goal=parseInt(v,10)||0; save(); renderProtein(); }
 function setDayLoc(d,loc){ S.loc[dateStrOf(d)]=loc; save(); renderWeek(); }
 function setTodayLoc(loc){ setDayLoc(todayDow(), loc); }
@@ -1403,6 +1423,9 @@ function normalize(){
   if(S.age==null)S.age=42; if(S.height==null)S.height=182; if(S.weight==null)S.weight=77;
   if(S.wgoal==null)S.wgoal=80; if(!S.period)S.period='week';
   if(S.goal==null)S.goal=150; if(S.cgoal==null)S.cgoal=5; if(S.restDay==null)S.restDay=6;
+  if(S.restDay2===undefined)S.restDay2=null;
+  if(S.restDay2===S.restDay)S.restDay2=null;
+  if(S.gymDay!=null && S.restDay2!=null && S.gymDay===S.restDay2)S.restDay2=null;
   if(!S.photos)S.photos=[]; if(!S.vit)S.vit={}; if(S.vitNote==null)S.vitNote='';
   if(!S.water)S.water={}; if(S.waterGoal==null)S.waterGoal=Math.round((S.weight||77)*35/100)*100;
   if(!S.deloadStart)S.deloadStart=todayKey(); if(!S.checkins)S.checkins={}; if(!S.lifts)S.lifts={};
