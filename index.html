@@ -6,6 +6,7 @@
 <title>dEAw Life</title>
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="dEAw Life">
@@ -197,6 +198,29 @@
   .exsheet svg{margin:6px auto}
   .exsheet .exmuscles{font-size:12px;color:var(--muted);margin-top:8px}
   .exsheet .exvid{display:inline-block;margin-top:14px;background:var(--accent);color:#fff;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:700;text-decoration:none}
+  /* guided session */
+  .sess{display:none;position:fixed;inset:0;background:var(--bg);z-index:60;overflow-y:auto}
+  .sess.on{display:block}
+  .sess .sin{max-width:520px;margin:0 auto;padding:18px 18px 40px}
+  .sess .shead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:10px}
+  .sess .stime{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .sess .sx{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer}
+  .sess .sprog{font-size:12px;color:var(--muted)}
+  .sess .sbar{height:6px;background:var(--card2);border-radius:999px;overflow:hidden;margin:6px 0 16px;border:1px solid var(--line)}
+  .sess .sbar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--good));transition:width .3s}
+  .sess .scard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;text-align:center}
+  .sess .sname{font-size:19px;font-weight:800;margin-top:6px}
+  .sess .ssr{font-size:14px;color:var(--accent);font-weight:700;margin:4px 0 6px}
+  .setrow{display:flex;justify-content:center;gap:10px;margin:14px 0;flex-wrap:wrap}
+  .setrow button{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:var(--card2);color:var(--muted);font-weight:800;font-size:15px}
+  .setrow button.don{background:var(--good);border-color:var(--good);color:#06210f}
+  .sess .restbig{font-size:44px;font-weight:900;color:var(--accent2);font-variant-numeric:tabular-nums;margin:6px 0}
+  .sess .snav{display:flex;gap:10px;margin-top:16px}
+  .sess .snav button{flex:1;padding:13px;border-radius:12px;font-size:14px;font-weight:700;border:1px solid var(--line);background:var(--card2);color:var(--txt)}
+  .sess .snav button.acc{background:var(--accent);border-color:var(--accent);color:#fff}
+  .sess .swin{margin-top:10px}
+  .ovl{font-size:10.5px;color:var(--accent2);margin-top:2px}
+  .startbtn{display:block;width:100%;margin-top:14px;padding:14px;border-radius:12px;background:var(--accent2);color:#04121f;border:none;font-size:15px;font-weight:800;letter-spacing:.3px}
 </style>
 </head>
 <body>
@@ -204,7 +228,7 @@
   <header class="top">
     <div>
       <h1>My 7-Day <span>Workout</span> Planner</h1>
-      <div class="sub">6 days · 2 gym visits (Legs &amp; Back) · 4 home days (DB + bench) · Build-muscle</div>
+      <div class="sub">6 training days · 2× Legs &amp; Back · every day flips Gym ⇄ Home (DB + bench) · Build-muscle</div>
     </div>
   </header>
 
@@ -277,13 +301,13 @@
   <section class="panel">
     <h2>Do I need the gym this week?</h2>
     <div class="status">
-      <div class="chip"><span id="dotG1" class="dot no"></span> Gym visit 1 <span id="txtG1" style="color:var(--muted);font-weight:500"></span></div>
-      <div class="chip"><span id="dotG2" class="dot no"></span> Gym visit 2 <span id="txtG2" style="color:var(--muted);font-weight:500"></span></div>
+      <div class="chip"><span id="dotG1" class="dot no"></span> Legs session 1 <span id="txtG1" style="color:var(--muted);font-weight:500"></span></div>
+      <div class="chip"><span id="dotG2" class="dot no"></span> Legs session 2 <span id="txtG2" style="color:var(--muted);font-weight:500"></span></div>
       <button class="btn" onclick="newWeek()">Start new week</button>
     </div>
     <div id="gymBanner" class="banner warn"></div>
     <div class="foot" style="text-align:left;margin-top:10px">
-      Gym days use your 3 machines: <b>Leg Extension/Curl (PL9019)</b>, <b>Lat Pulldown/Row (PL9002)</b>, and <b>Shoulder Press (Multi Press PL9021)</b> — the work that's hard at home. Biceps, chest &amp; side-delts stay home. Tick each gym day done <i>(at gym)</i> to track your 2 visits. Can't get there? Flip that day to <b>Home</b> for a dumbbell version.
+      Every workout now has a <b>Gym</b> and a <b>Home</b> version of the same muscle group — flip the toggle on any day. Gym versions use your machines — <b>Leg Extension/Curl (PL9019)</b>, <b>Lat Pulldown/Row (PL9002)</b>, <b>Multi Press (PL9021)</b> — plus dumbbells &amp; bench; Home versions use dumbbells + bench only. Can't reach the gym on leg day? Flip it to <b>Home</b> and do the same session with dumbbells.
     </div>
   </section>
 
@@ -438,6 +462,9 @@
   <div class="foot">Everything saves automatically on this device. Bookmark this page or add it to your phone home screen.</div>
 </div>
 
+<!-- guided session overlay -->
+<div class="sess" id="sessModal"><div class="sin" id="sessBody"></div></div>
+
 <!-- floating rest timer -->
 <div class="resttimer" id="restTimer">
   <span class="rt-lbl">Rest</span>
@@ -528,11 +555,11 @@ const WORKOUTS = {
     title:"Chest & Triceps", focus:"Home · push", home:true,
     parts:["chest","triceps","shoulders"],
     exercises:[
-      ex("DB Bench Press","Barbell Bench Press","4 × 8-12",["chest"]),
-      ex("Incline DB Press","Incline Barbell Press","3 × 10-12",["chest","shoulders"]),
-      ex("DB Fly (on bench)","Cable Fly / Pec Deck","3 × 12-15",["chest"]),
-      ex("Overhead DB Triceps Extension","Cable Overhead Extension","3 × 10-12",["triceps"]),
-      ex("DB Skull Crusher (on bench)","Rope Pushdown","3 × 10-12",["triceps"]),
+      ex("DB Bench Press","Chest Press — Multi Press PL9021","4 × 8-12",["chest"],"dumbbell bench press"),
+      ex("Incline DB Press","Incline Press — Multi Press PL9021","3 × 10-12",["chest","shoulders"],"incline dumbbell press"),
+      ex("DB Fly (on bench)","DB Fly (on bench)","3 × 12-15",["chest"],"dumbbell fly"),
+      ex("Overhead DB Triceps Extension","Overhead DB Triceps Extension","3 × 10-12",["triceps"],"overhead dumbbell triceps extension"),
+      ex("DB Skull Crusher (on bench)","DB Skull Crusher (on bench)","3 × 10-12",["triceps"],"dumbbell skull crusher"),
       ex("Plank — optional core (2 min)","Plank","2 × 30-45 sec",["abs"],"plank exercise")
     ]
   },
@@ -573,12 +600,12 @@ const WORKOUTS = {
     title:"Biceps & Delts", focus:"Home · biceps + side/rear delts", home:true,
     parts:["biceps","shoulders"],
     exercises:[
-      ex("DB Biceps Curl","EZ-Bar / Cable Curl","4 × 10-12",["biceps"]),
-      ex("DB Hammer Curl","Rope Hammer Curl","3 × 10-12",["biceps"]),
-      ex("DB Incline Curl (on bench)","Cable Curl","3 × 10-12",["biceps"]),
-      ex("DB Lateral Raise","Cable Lateral Raise","4 × 12-20",["shoulders"]),
-      ex("DB Rear-Delt Fly (on bench)","Reverse Pec Deck","3 × 15-20",["shoulders"]),
-      ex("Lying Leg Raise — optional core (2 min)","Hanging Leg Raise","2 × 15",["abs"],"lying leg raise")
+      ex("DB Biceps Curl","DB Biceps Curl","4 × 10-12",["biceps"],"dumbbell biceps curl"),
+      ex("DB Hammer Curl","DB Hammer Curl","3 × 10-12",["biceps"],"dumbbell hammer curl"),
+      ex("DB Incline Curl (on bench)","Underhand-Grip Pulldown — PL9002 (biceps)","3 × 10-12",["biceps"],"incline dumbbell curl"),
+      ex("DB Lateral Raise","DB Lateral Raise","4 × 12-20",["shoulders"],"dumbbell lateral raise"),
+      ex("DB Rear-Delt Fly (on bench)","DB Rear-Delt Fly (on bench)","3 × 15-20",["shoulders"],"dumbbell rear delt fly"),
+      ex("Lying Leg Raise — optional core (2 min)","Lying Leg Raise — optional core (2 min)","2 × 15",["abs"],"lying leg raise")
     ]
   }
 };
@@ -638,8 +665,9 @@ function buildPlan(){
   days.forEach(d=>{
     if(comp[d]){ typeMap[d]=comp[d].type; return; }
     if(typeMap[d]) return;   // already reserved (preferred gym day)
-    const pd=(d-1+7)%7;
-    const prev=(pd===rest)?null:(typeMap[pd] || (comp[pd]&&comp[pd].type) || null);
+    let prev=null;
+    if(d===0){ const h=S.history[iso(addDays(curMonday(),-1))]; prev=h?typeOfKey(h.key):null; }  // Monday looks at last week's Sunday
+    else { const pd=d-1; prev=(pd===rest)?null:(typeMap[pd] || (comp[pd]&&comp[pd].type) || null); }
     let cands=['gym','chest','biceps'].filter(t=>target[t]>0);
     if(cands.length===0) cands=['chest','biceps'];          // bonus home days once targets met
     cands=cands.filter(t=>{
@@ -671,8 +699,6 @@ function buildPlan(){
   });
   return {map, typeMap, target};
 }
-function schedule(){ return buildPlan().map; }
-function bestHomeType(){ const t=buildPlan().target; return (t.biceps||0)>(t.chest||0)?'biceps':'chest'; }
 function gymVariantThisWeek(){ const rest=S.restDay; let n=0;
   for(let d=0;d<7;d++){ if(d===rest)continue; const h=S.history[dateStrOf(d)]; if(h&&typeOfKey(h.key)==='gym') n++; }
   return n%2===0?'gymA':'gymB'; }
@@ -687,9 +713,8 @@ function todayPick(){
   if(logged) return {key:logged.key, loc:logged.loc, logged:true};
   const plan=buildPlan(); const planType=plan.typeMap[today];
   const loc=S.loc[ds] || (planType==='gym'?'gym':'home');
-  let key;
-  if(loc==='gym') key=gymVariantThisWeek();
-  else key = (planType==='gym') ? HOME_KEY[bestHomeType()] : (HOME_KEY[planType]||'chestTri');
+  // Same muscle group either way — the Home/Gym choice only swaps exercise variants.
+  const key = (planType==='gym') ? gymVariantThisWeek() : (HOME_KEY[planType]||'chestTri');
   return {key, loc, logged:false};
 }
 
@@ -755,17 +780,43 @@ function exListHTML(key, loc){
     const showGym = loc==='gym';
     const nm = showGym? e.gym : e.home;
     const last = lifts[nm]||'';
-    const vq = showGym? e.gym : e.home;
+    const vq = showGym ? e.gym.split('—')[0].trim() : (e.q||e.home);
     html+=`<div class="ex">
       <div class="thumb" onclick="showExercise(this)" data-parts="${esc(e.parts.join(','))}" data-nm="${esc(nm)}" data-sr="${esc(e.sr)}" data-q="${esc(vq)}">${bodySVG(e.parts)}</div>
-      <div class="info"><div class="nm">${nm}</div><div class="sr">${e.sr}</div></div>
+      <div class="info"><div class="nm">${nm}</div><div class="sr">${e.sr}</div>${overloadHint(nm)}</div>
       <div class="wwrap"><input class="wlog" inputmode="decimal" placeholder="kg" value="${esc(last)}" data-ex="${esc(nm)}" onchange="setLift(this)"><small>last</small></div>
       <a class="yt" href="${yt(vq)}" target="_blank">▶</a>
     </div>`;
   });
   return html;
 }
-function setLift(el){ if(!S.lifts)S.lifts={}; const v=el.value.trim(); const k=el.dataset.ex; if(v) S.lifts[k]=v; else delete S.lifts[k]; save(); }
+function setLift(el){
+  if(!S.lifts)S.lifts={}; if(!S.liftHist)S.liftHist={};
+  const v=el.value.trim(); const k=el.dataset.ex;
+  if(v){
+    S.lifts[k]=v;
+    const h=S.liftHist[k]||(S.liftHist[k]=[]);
+    const tk=todayKey(); const e0=h.find(x=>x.d===tk);
+    if(e0) e0.v=v; else h.push({d:tk, v});
+    if(h.length>30) h.splice(0, h.length-30);   // keep last 30 entries
+  } else delete S.lifts[k];
+  save();
+}
+/* progressive-overload hint: recent weights + suggestion when a weight plateaus */
+function overloadHint(nm){
+  const h=(S.liftHist||{})[nm]||[];
+  if(h.length===0) return '';
+  const recent=h.slice(-3).map(x=>x.v);
+  let tip='';
+  if(h.length>=2){
+    const a=parseFloat(h[h.length-2].v), b=parseFloat(h[h.length-1].v);
+    if(!isNaN(a)&&!isNaN(b)){
+      if(b>a) tip=' · nice increase 💪';
+      else if(b===a) tip=` · at the top of the rep range? try <b>${+(b+2.5).toFixed(1)} kg</b>`;
+    }
+  }
+  return `<div class="ovl">last: ${recent.join(' → ')} kg${tip}</div>`;
+}
 function renderWeek(){
   const plan=buildPlan(); const map=plan.map; const wk=document.getElementById('week'); wk.innerHTML='';
   const td=todayDow();
@@ -801,17 +852,25 @@ function renderWeek(){
         wk.appendChild(det); continue;
       }
       const w=WORKOUTS[p.key];
-      const pill = (typeOfKey(p.key)==='gym') ? '<span class="pill gym">Gym</span>' : '<span class="pill home">Home</span>';
-      const doneFlag = p.logged ? '<span class="sdone">✓ trained</span>' : '';
+      const pill = (p.loc==='gym') ? '<span class="pill gym">Gym</span>' : '<span class="pill home">Home</span>';
+      const hh=S.history[dateStrOf(d)];
+      const doneFlag = p.logged ? `<span class="sdone">✓ trained${hh&&hh.dur?' · '+hh.dur+' min':''}</span>` : '';
+      const isGymType = typeOfKey(p.key)==='gym';
       let warn='';
-      if(!p.logged && p.loc==='gym'){
+      if(!p.logged && isGymType){
         const yda=(d-1+7)%7; const ydH = (yda!==S.restDay) && S.history[dateStrOf(yda)] && typeOfKey(S.history[dateStrOf(yda)].key)==='gym';
-        if(gymsThisWeek()>=2) warn='<div class="gymwarn">You\'ve already done 2 gym days this week — a home day is better for recovery, but your call.</div>';
-        else if(ydH) warn='<div class="gymwarn">You trained the gym yesterday — give legs/back/shoulders a rest day. A home session is recommended.</div>';
+        if(gymsThisWeek()>=2) warn='<div class="gymwarn">You\'ve already done 2 Legs·Back·Shoulders sessions this week — an easier day is better for recovery, but your call.</div>';
+        else if(ydH) warn='<div class="gymwarn">You trained legs/back/shoulders yesterday — give them a rest day before hitting them again.</div>';
       }
+      let note='';
+      if(!p.logged && isGymType && p.loc==='home')
+        note='<div class="focus" style="margin-bottom:8px">🏠 <b style="color:var(--home)">Home version</b> — same muscles, machines swapped for dumbbells + bench. Go slow (3s down) and pause reps to make lighter weights count.</div>';
+      else if(!p.logged && !isGymType && p.loc==='gym')
+        note='<div class="focus" style="margin-bottom:8px">🏋️ <b style="color:var(--gym)">Gym version</b> — same muscles, using the Multi Press / pulldown where they beat dumbbells.</div>';
       const btns = p.logged
         ? `<button class="trainbtn done" onclick="undoToday()">✓ Trained today — tap to undo</button>`
-        : `<button class="trainbtn" onclick="trainToday()">✓ I trained today</button>
+        : `<button class="startbtn" onclick="startSession()">▶ Start guided workout</button>
+           <button class="trainbtn" style="margin-top:8px" onclick="trainToday()">✓ I trained today (log only)</button>
            <button class="skipbtn" onclick="skipToday()">⤼ Skipped today</button>`;
       det.innerHTML=`
         <summary>
@@ -819,11 +878,12 @@ function renderWeek(){
           <div class="stitle">${w.title} ${pill}${doneFlag}</div>
           <div class="schev">▾</div></summary>
         <div class="dbody">
-          <div class="focus" style="margin-bottom:8px">Where are you today?</div>
+          ${p.logged?'':`<div class="focus" style="margin-bottom:8px">Where are you today?</div>
           <div class="loc-toggle">
-            <button class="${p.loc==='home'?'on home':''}" onclick="setTodayLoc('home')">🏠 Home</button>
-            <button class="${p.loc==='gym'?'on gym':''}" onclick="setTodayLoc('gym')">🏋️ Gym</button>
-          </div>
+            <button class="${p.loc==='home'?'on home':''}" onclick="setDayLoc(${d},'home')">🏠 Home</button>
+            <button class="${p.loc==='gym'?'on gym':''}" onclick="setDayLoc(${d},'gym')">🏋️ Gym</button>
+          </div>`}
+          ${note}
           ${warn}
           ${exListHTML(p.key, p.loc)}
           ${btns}
@@ -844,9 +904,10 @@ function renderWeek(){
     // forecast day (flexible)
     const w=WORKOUTS[key];
     const isGym = typeOfKey(key)==='gym';
-    const loc = isGym?'gym':'home';
-    const pill = isGym?'<span class="pill gym">Gym</span>':'<span class="pill home">Home</span>';
     const done = !!S.history[did];
+    const loc = done ? (S.history[did].loc || (isGym?'gym':'home'))
+                     : (S.loc[did] || (isGym?'gym':'home'));
+    const pill = loc==='gym'?'<span class="pill gym">Gym</span>':'<span class="pill home">Home</span>';
     const doneFlag = done ? '<span class="sdone">✓ done</span>' : '';
     det.innerHTML=`
       <summary>
@@ -855,6 +916,10 @@ function renderWeek(){
         <div class="schev">▾</div></summary>
       <div class="dbody">
         <div class="focus" style="margin-bottom:8px">${w.focus} · <span style="opacity:.7">flexible — adapts to what you actually train</span></div>
+        ${done?'':`<div class="loc-toggle">
+          <button class="${loc==='home'?'on home':''}" onclick="setDayLoc(${d},'home')">🏠 Home</button>
+          <button class="${loc==='gym'?'on gym':''}" onclick="setDayLoc(${d},'gym')">🏋️ Gym</button>
+        </div>`}
         ${exListHTML(key, loc)}
         <label class="done-row"><input type="checkbox" ${done?'checked':''} onchange="toggleDone(${d},this.checked)"> Mark done</label>
         ${done?'':`<button class="skipbtn" style="margin-top:8px" onclick="skipDay(${d})">⤼ Mark this day skipped</button>`}
@@ -865,29 +930,28 @@ function renderWeek(){
 }
 
 function renderGymStatus(){
-  // count completed gym (Legs & Back) sessions done at the gym this week
-  const map=schedule();
-  let gymDone=0;
+  // completed Legs·Back·Shoulders sessions this week, either location
+  const sess=[];
   for(let d=0; d<7; d++){
-    const w=WORKOUTS[map[d]];
-    if(w && w.gymDay){
-      const did=dateStrOf(d);
-      const h=S.history[did];
-      if(h && (h.loc||'gym')==='gym') gymDone++;
-    }
+    if(d===S.restDay) continue;
+    const h=S.history[dateStrOf(d)];
+    if(h && typeOfKey(h.key)==='gym') sess.push(h.loc||'gym');
   }
-  setDot('dotG1', gymDone>=1); setTx('txtG1', gymDone>=1?'✓ done':'· to do');
-  setDot('dotG2', gymDone>=2); setTx('txtG2', gymDone>=2?'✓ done':'· to do');
+  const done=sess.length, atGym=sess.filter(l=>l==='gym').length;
+  setDot('dotG1', done>=1); setTx('txtG1', done>=1?(sess[0]==='gym'?'✓ gym':'✓ home'):'· to do');
+  setDot('dotG2', done>=2); setTx('txtG2', done>=2?(sess[1]==='gym'?'✓ gym':'✓ home'):'· to do');
   const b=document.getElementById('gymBanner');
-  if(gymDone>=2){
+  if(done>=2){
     b.className='banner ok';
-    b.innerHTML='✅ Both gym sessions done (<b>Legs &amp; Back</b>). The rest of your week is fully home-based — no more gym trips needed.';
-  }else if(gymDone===1){
+    b.innerHTML = atGym>=2
+      ? '✅ Both <b>Legs · Back · Shoulders</b> sessions done at the gym. The rest of your week is home-based — no more gym trips needed.'
+      : '✅ Both <b>Legs · Back · Shoulders</b> sessions done ('+atGym+' gym · '+(done-atGym)+' home). The rest of your week is home-based.';
+  }else if(done===1){
     b.className='banner ok';
-    b.innerHTML='✅ 1 of 2 gym sessions done. One more <b>Legs &amp; Back</b> visit to go. Can\'t make it? Flip that day to <b>Home</b> for a full dumbbell leg session.';
+    b.innerHTML='✅ 1 of 2 <b>Legs · Back · Shoulders</b> sessions done'+(sess[0]==='home'?' (at home)':'')+'. One more to go — gym if you can, or flip it to <b>Home</b> for the same session with dumbbells.';
   }else{
     b.className='banner warn';
-    b.innerHTML='⚠️ Plan <b>2 gym visits</b> this week for <b>Legs &amp; Back</b> — the only work that truly needs the gym (heavy legs + lat pulldowns). Tick each gym day done <i>(at gym)</i> to track them.';
+    b.innerHTML='⚠️ Plan <b>2 Legs · Back · Shoulders sessions</b> this week — gym is best (heavy legs + lat pulldown), but any of them can be flipped to <b>Home</b> for the dumbbell + bench version.';
   }
   function setDot(id,ok){ const el=document.getElementById(id); if(el) el.className='dot '+(ok?'ok':'no'); }
   function setTx(id,t){ const el=document.getElementById(id); if(el) el.textContent=t; }
@@ -1043,6 +1107,7 @@ function showExercise(el){
     <div class="exsr">${sr}</div>
     ${bodySVG(parts,280,191)}
     <div class="exmuscles">Targets: <b style="color:var(--txt)">${names||'full body'}</b></div>
+    ${(()=>{const h=(S.liftHist||{})[nm]||[]; return h.length?`<div class="exmuscles">Recent weights: ${h.slice(-5).map(x=>`${x.d.slice(5)}: <b style="color:var(--txt)">${x.v}</b>`).join(' · ')} kg</div>`:'';})()}
     <a class="exvid" href="${yt(q)}" target="_blank">▶ Watch form video</a>`;
   document.getElementById('exModal').className='modal on';
 }
@@ -1122,10 +1187,100 @@ function renderWeightChart(){
   dEl.style.color = Math.abs(delta)<0.1?'var(--muted)':(delta>0?'var(--gym)':'var(--good)');
 }
 
+/* ============ GUIDED SESSION ============ */
+let GS=null, _st=null, _srt=null;
+function setCount(sr){ const m=String(sr).match(/^(\d+)/); return m?Math.min(8,parseInt(m[1],10)):3; }
+function startSession(){
+  const p=todayPick(); if(p.rest||p.logged) return;
+  const w=WORKOUTS[p.key];
+  GS={key:p.key, loc:p.loc, ex:0, done:w.exercises.map(()=>0), start:Date.now(), rest:0};
+  document.getElementById('sessModal').className='sess on';
+  clearInterval(_st);
+  _st=setInterval(()=>{ const el=document.getElementById('sessTime'); if(el&&GS) el.textContent=fmt(Math.floor((Date.now()-GS.start)/1000)); },1000);
+  renderSession();
+}
+function closeSession(force){
+  if(!force && !confirm('Leave without finishing? This session\'s set ticks are lost (logged weights are kept).')) return;
+  GS=null; clearInterval(_st); clearInterval(_srt); _srt=null;
+  document.getElementById('sessModal').className='sess';
+}
+function sessSet(i){
+  const w=WORKOUTS[GS.key], n=setCount(w.exercises[GS.ex].sr);
+  if(i < GS.done[GS.ex]){ GS.done[GS.ex]=i; clearInterval(_srt); _srt=null; GS.rest=0; renderSession(); return; } // untick
+  GS.done[GS.ex]=i+1;
+  if(GS.done[GS.ex] < n) sessRest(90);
+  else { GS.rest=0; clearInterval(_srt); _srt=null; }
+  renderSession();
+}
+function sessRest(sec){
+  GS.rest=sec; clearInterval(_srt);
+  _srt=setInterval(()=>{
+    if(!GS){ clearInterval(_srt); _srt=null; return; }
+    GS.rest--;
+    if(GS.rest<=0){ clearInterval(_srt); _srt=null; GS.rest=0;
+      try{ if(navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){}
+      renderSession(); return; }
+    const el=document.getElementById('sessRest'); if(el) el.textContent=fmt(GS.rest);
+  },1000);
+}
+function sessSkipRest(){ GS.rest=0; clearInterval(_srt); _srt=null; renderSession(); }
+function sessNav(dir){
+  const w=WORKOUTS[GS.key];
+  GS.ex=Math.max(0,Math.min(w.exercises.length-1,GS.ex+dir));
+  GS.rest=0; clearInterval(_srt); _srt=null; renderSession();
+}
+function finishSession(){
+  const ds=dateStrOf(todayDow());
+  const dur=Math.max(1,Math.round((Date.now()-GS.start)/60000));
+  S.history[ds]={key:GS.key, loc:GS.loc, dur};
+  save(); closeSession(true); renderWeek(); renderProgress();
+}
+function renderSession(){
+  if(!GS) return;
+  const w=WORKOUTS[GS.key], n=w.exercises.length, e=w.exercises[GS.ex];
+  const showGym=GS.loc==='gym', nm=showGym?e.gym:e.home;
+  const sets=setCount(e.sr), doneSets=GS.done[GS.ex];
+  const totalSets=w.exercises.reduce((a,x)=>a+setCount(x.sr),0);
+  const doneTotal=GS.done.reduce((a,b)=>a+b,0);
+  const allDone=GS.done.every((v,i)=>v>=setCount(w.exercises[i].sr));
+  const last=(S.lifts||{})[nm]||'';
+  const vq=showGym?e.gym.split('—')[0].trim():(e.q||e.home);
+  const mid = GS.rest>0
+    ? `<div class="focus">Rest — next set in</div><div class="restbig" id="sessRest">${fmt(GS.rest)}</div>
+       <button class="btn" onclick="sessSkipRest()">Skip rest</button>`
+    : (doneSets>=sets?'<div class="focus" style="color:var(--good);font-weight:700">✓ Exercise complete</div>':'<div class="focus">Tap each set as you finish it — rest timer starts automatically.</div>');
+  document.getElementById('sessBody').innerHTML=`
+    <div class="shead">
+      <div><b>${w.title}</b> ${GS.loc==='gym'?'<span class="pill gym">Gym</span>':'<span class="pill home">Home</span>'}</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="stime" id="sessTime">${fmt(Math.floor((Date.now()-GS.start)/1000))}</span>
+        <button class="sx" onclick="closeSession()">✕</button>
+      </div>
+    </div>
+    <div class="sprog">Exercise ${GS.ex+1} of ${n} · ${doneTotal}/${totalSets} sets done</div>
+    <div class="sbar"><i style="width:${Math.round(doneTotal/totalSets*100)}%"></i></div>
+    <div class="scard">
+      ${bodySVG(e.parts,200,136)}
+      <div class="sname">${nm}</div>
+      <div class="ssr">${e.sr}</div>
+      ${overloadHint(nm)}
+      <div class="setrow">${Array.from({length:sets},(_,i)=>`<button class="${i<doneSets?'don':''}" onclick="sessSet(${i})">${i+1}</button>`).join('')}</div>
+      ${mid}
+      <div class="swin"><input class="wlog" style="width:80px" inputmode="decimal" placeholder="kg" value="${esc(last)}" data-ex="${esc(nm)}" onchange="setLift(this)"> <small style="color:var(--muted)">weight used (kg)</small></div>
+      <div style="margin-top:10px"><a class="yt" href="${yt(vq)}" target="_blank">▶ form video</a></div>
+    </div>
+    <div class="snav">
+      <button onclick="sessNav(-1)" ${GS.ex===0?'disabled style="opacity:.4"':''}>← Prev</button>
+      ${GS.ex<n-1?`<button class="${doneSets>=sets?'acc':''}" onclick="sessNav(1)">Next →</button>`:''}
+      ${(allDone||GS.ex===n-1)?`<button class="acc" onclick="finishSession()">✓ Finish${allDone?'':' anyway'}</button>`:''}
+    </div>`;
+}
+
 /* ============ ACTIONS ============ */
 function setRest(v){ S.restDay=parseInt(v,10); save(); renderWeek(); }
 function setGoal(v){ S.goal=parseInt(v,10)||0; save(); renderProtein(); }
-function setTodayLoc(loc){ const ds=dateStrOf(todayDow()); S.loc[ds]=loc; save(); renderWeek(); }
+function setDayLoc(d,loc){ S.loc[dateStrOf(d)]=loc; save(); renderWeek(); }
+function setTodayLoc(loc){ setDayLoc(todayDow(), loc); }
 function trainToday(){
   const ds=dateStrOf(todayDow()); const p=todayPick();
   if(p.rest||p.logged) return;
@@ -1137,7 +1292,7 @@ function skipToday(){ const ds=dateStrOf(todayDow()); S.history[ds]={key:'skip',
 function skipDay(d){ const ds=dateStrOf(d); S.history[ds]={key:'skip', loc:'skip'}; save(); renderWeek(); renderProgress(); }
 function toggleDone(d,c){
   const ds=dateStrOf(d); const map=buildPlan().map;
-  if(c){ const key=map[d]; S.history[ds]={key, loc:(typeOfKey(key)==='gym'?'gym':'home')}; }
+  if(c){ const key=map[d]; const loc=S.loc[ds] || (typeOfKey(key)==='gym'?'gym':'home'); S.history[ds]={key, loc}; }
   else { delete S.history[ds]; }
   save(); renderWeek(); renderProgress();
 }
@@ -1251,6 +1406,7 @@ function normalize(){
   if(!S.photos)S.photos=[]; if(!S.vit)S.vit={}; if(S.vitNote==null)S.vitNote='';
   if(!S.water)S.water={}; if(S.waterGoal==null)S.waterGoal=Math.round((S.weight||77)*35/100)*100;
   if(!S.deloadStart)S.deloadStart=todayKey(); if(!S.checkins)S.checkins={}; if(!S.lifts)S.lifts={};
+  if(!S.liftHist)S.liftHist={};
   if(!S.tab)S.tab='workout';
   if(S.gymDay===undefined)S.gymDay=6;   // default: usual gym day = Sunday (legs)
   // a day can't be both rest and gym — if they collide, shift rest mid-week
@@ -1266,6 +1422,11 @@ function init(){
   showTab(S.tab||'workout');
 }
 init();
+
+/* ============ OFFLINE (PWA) ============ */
+if('serviceWorker' in navigator && location.protocol!=='file:'){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
 </script>
 </body>
 </html>
