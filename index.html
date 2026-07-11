@@ -265,10 +265,6 @@
     </div>
     <div class="foot" style="text-align:left;margin-top:10px">Everything is saved privately on this device. <b>Backup</b> downloads a file (save it to iCloud Drive) — use <b>Restore</b> on a new phone to bring it all back.</div>
   </section>
-  </div><!-- /profile tab -->
-
-  <!-- ===== WORKOUT TAB ===== -->
-  <div class="tab on" id="tab-workout">
   <!-- SETTINGS -->
   <section class="panel">
     <h2>Setup</h2>
@@ -300,7 +296,10 @@
       </div>
     </div>
   </section>
+  </div><!-- /profile tab -->
 
+  <!-- ===== WORKOUT TAB ===== -->
+  <div class="tab on" id="tab-workout">
   <!-- GYM STATUS -->
   <section class="panel">
     <h2>Do I need the gym this week?</h2>
@@ -311,7 +310,7 @@
     </div>
     <div id="gymBanner" class="banner warn"></div>
     <div class="foot" style="text-align:left;margin-top:10px">
-      Every workout now has a <b>Gym</b> and a <b>Home</b> version of the same muscle group — flip the toggle on any day. Gym versions use your machines — <b>Leg Extension/Curl (PL9019)</b>, <b>Lat Pulldown/Row (PL9002)</b>, <b>Multi Press (PL9021)</b> — plus dumbbells &amp; bench; Home versions use dumbbells + bench only. Can't reach the gym on leg day? Flip it to <b>Home</b> and do the same session with dumbbells.
+      Going to the gym more often (e.g. mornings)? Great — <b>every session has a Gym version</b>, so you can train <b>chest, biceps and delts at the gym too</b> (barbell/cable/machine), not just legs & back. Just tap <b>🏋️ Gym</b> on that day. Gym versions use your machines — Leg Ext/Curl (PL9019), Lat Pulldown/Row (PL9002), Multi Press (PL9021) — plus barbell/cable/dumbbell; Home versions use dumbbells + bench. The two <b>Legs sessions</b> below just track that you hit lower body twice a week — do them wherever you like.
     </div>
   </section>
 
@@ -783,6 +782,11 @@ function setGymDay(v){
 }
 
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+// rough calorie-per-set estimate (scaled to bodyweight). Approximate — resistance-training burn varies a lot.
+const CAL_W={quads:6,hams:6,glutes:5,back:6,chest:5,shoulders:4,traps:3,biceps:3,triceps:3,calves:3,abs:3};
+function calSet(parts){ let s=0; (parts||[]).forEach(p=>s+=(CAL_W[p]||3)); const kg=S.weight||77; return Math.max(3, Math.round(s*kg/77)); }
+function setsOf(sr){ const m=(sr||'').match(/(\d+)/); return m?parseInt(m[1],10):3; }
+function sessionCal(key){ let t=0; (WORKOUTS[key].exercises||[]).forEach(e=>{ t+=calSet(e.parts)*setsOf(e.sr); }); return t; }
 function exListHTML(key, loc){
   const w=WORKOUTS[key]; let html=''; const lifts=S.lifts||{};
   w.exercises.forEach((e)=>{
@@ -792,7 +796,7 @@ function exListHTML(key, loc){
     const vq = showGym ? e.gym.split('—')[0].trim() : (e.q||e.home);
     html+=`<div class="ex">
       <div class="thumb" onclick="showExercise(this)" data-parts="${esc(e.parts.join(','))}" data-nm="${esc(nm)}" data-sr="${esc(e.sr)}" data-q="${esc(vq)}">${bodySVG(e.parts)}</div>
-      <div class="info"><div class="nm">${nm}</div><div class="sr">${e.sr}</div>${overloadHint(nm)}</div>
+      <div class="info"><div class="nm">${nm}</div><div class="sr">${e.sr} · <span style="color:var(--gym)">~${calSet(e.parts)} kcal/set</span></div>${overloadHint(nm)}</div>
       <div class="wwrap"><input class="wlog" inputmode="decimal" placeholder="kg" value="${esc(last)}" data-ex="${esc(nm)}" onchange="setLift(this)"><small>last</small></div>
       <a class="yt" href="${yt(vq)}" target="_blank">▶</a>
     </div>`;
@@ -1116,6 +1120,7 @@ function showExercise(el){
     <div class="exsr">${sr}</div>
     ${bodySVG(parts,280,191)}
     <div class="exmuscles">Targets: <b style="color:var(--txt)">${names||'full body'}</b></div>
+    <div class="exmuscles">Est. burn: <b style="color:var(--gym)">~${calSet(parts)} kcal/set</b> <span style="opacity:.7">(rough estimate)</span></div>
     ${(()=>{const h=(S.liftHist||{})[nm]||[]; return h.length?`<div class="exmuscles">Recent weights: ${h.slice(-5).map(x=>`${x.d.slice(5)}: <b style="color:var(--txt)">${x.v}</b>`).join(' · ')} kg</div>`:'';})()}
     <a class="exvid" href="${yt(q)}" target="_blank">▶ Watch form video</a>`;
   document.getElementById('exModal').className='modal on';
