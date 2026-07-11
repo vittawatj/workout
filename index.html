@@ -440,19 +440,7 @@
     <input id="checkNote" type="text" placeholder="Notes — how did the week feel?" style="width:100%" onchange="setCheckNote(this.value)">
     <div class="recnote" id="checkHist"></div>
   </section>
-  <!-- PHOTOS (inside Progress) -->
-  <section class="panel">
-    <h2>Progress Photos</h2>
-    <label class="photobtn">+ Add photo
-      <input id="photoInput" type="file" accept="image/*" style="display:none" onchange="addPhoto(this.files[0])">
-    </label>
-    <span class="foot" style="margin-left:10px">Stored privately on this device only.</span>
-    <div class="gallery" id="gallery"></div>
-  </section>
   </div><!-- /progress tab -->
-
-  <!-- photo viewer -->
-  <div id="photoModal" class="modal" onclick="closePhoto()"><img id="photoModalImg" src=""></div>
 
   <!-- exercise quick-look -->
   <div id="exModal" class="modal" onclick="closeExercise()">
@@ -1073,41 +1061,6 @@ function renderVitamins(){
 function toggleVitamin(){ const tk=todayKey(); if(S.vit[tk]) delete S.vit[tk]; else S.vit[tk]=true; save(); renderVitamins(); }
 function setVitNote(v){ S.vitNote=v; save(); }
 
-/* ============ PHOTOS ============ */
-function addPhoto(file){
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const img=new Image();
-    img.onload=()=>{
-      const max=800; let {width:w,height:h}=img;
-      if(w>h && w>max){ h=Math.round(h*max/w); w=max; } else if(h>=w && h>max){ w=Math.round(w*max/h); h=max; }
-      const c=document.createElement('canvas'); c.width=w; c.height=h;
-      c.getContext('2d').drawImage(img,0,0,w,h);
-      const data=c.toDataURL('image/jpeg',0.6);
-      if(!S.photos) S.photos=[];
-      S.photos.push({d:todayKey(), img:data, ts:Date.now()});
-      try{ save(); }
-      catch(err){ S.photos.pop(); alert('Storage is full — delete a few older photos and try again.'); return; }
-      renderPhotos();
-    };
-    img.src=e.target.result;
-  };
-  reader.readAsDataURL(file);
-  document.getElementById('photoInput').value='';
-}
-function renderPhotos(){
-  const g=document.getElementById('gallery'); if(!g) return;
-  const ph=(S.photos||[]).slice().sort((a,b)=>(b.ts||0)-(a.ts||0));
-  if(ph.length===0){ g.innerHTML='<div class="foot">No photos yet. Add one to track your visual progress over time.</div>'; return; }
-  g.innerHTML = ph.map(p=>{
-    const idx=S.photos.indexOf(p);
-    return `<div class="gphoto"><img src="${p.img}" onclick="openPhoto(${idx})"><button class="gdel" onclick="delPhoto(${idx})">✕</button><div class="gdate">${p.d.slice(5)}</div></div>`;
-  }).join('');
-}
-function delPhoto(i){ if(!confirm('Delete this photo?'))return; S.photos.splice(i,1); save(); renderPhotos(); }
-function openPhoto(i){ const m=document.getElementById('photoModal'); document.getElementById('photoModalImg').src=S.photos[i].img; m.className='modal on'; }
-function closePhoto(){ document.getElementById('photoModal').className='modal'; }
 
 /* ============ EXERCISE QUICK-LOOK ============ */
 const MUSCLE_LABEL={chest:'Chest',back:'Back / lats',shoulders:'Shoulders',biceps:'Biceps',triceps:'Triceps',quads:'Quads',hams:'Hamstrings',glutes:'Glutes',calves:'Calves',traps:'Upper back',abs:'Abs / core'};
@@ -1446,7 +1399,7 @@ function init(){
   normalize();
   renderProfile(); renderSetup(); renderWeek();
   renderProtein(); renderCreatine(); renderVitamins(); renderWater();
-  renderDeload(); renderProgress(); renderCheckin(); renderPhotos();
+  renderDeload(); renderProgress(); renderCheckin();
   showTab(S.tab||'workout');
 }
 init();
