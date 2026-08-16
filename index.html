@@ -754,14 +754,13 @@ function setLeanGoal(v){ const g=parseFloat(v); if(!g) return; S.wgoal=g; save()
 
 /* ============ RENDER ============ */
 function renderSetup(){
-  const sel=document.getElementById('restDay'); sel.innerHTML='';
+  const sel=document.getElementById('restDay'); if(!sel) return;
+  sel.innerHTML='';
   DOW.forEach((d,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=d; if(i===S.restDay)o.selected=true; sel.appendChild(o); });
   const sel2=document.getElementById('restDay2');
   if(sel2){ sel2.innerHTML='<option value="-1">None (6-day week)</option>'+DOW.map((d,i)=>`<option value="${i}" ${S.restDay2===i?'selected':''}>${d}</option>`).join(''); }
   const gsel=document.getElementById('gymDaySel');
   if(gsel){ gsel.innerHTML='<option value="-1">No fixed day</option>'+DOW.map((d,i)=>`<option value="${i}" ${S.gymDay===i?'selected':''}>${d}</option>`).join(''); }
-  document.getElementById('proteinGoal').value=S.goal;
-  document.getElementById('creatineGoal').value=(S.cgoal!=null?S.cgoal:5);
 }
 function setGymDay(v){
   const n=parseInt(v,10);
