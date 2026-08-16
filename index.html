@@ -228,7 +228,7 @@
   <header class="top">
     <div>
       <h1>My 7-Day <span>Workout</span> Planner</h1>
-      <div class="sub">5–6 training days · 2× Legs &amp; Back · every day flips Gym ⇄ Home (DB + bench) · Build-muscle</div>
+      <div class="sub">5–6 training days · gym-based · machines &amp; cables (wrist-friendly) · Build-muscle</div>
     </div>
   </header>
 
@@ -292,23 +292,15 @@
 
   <!-- ===== WORKOUT TAB ===== -->
   <div class="tab on" id="tab-workout">
-  <!-- GYM STATUS -->
-  <section class="panel">
-    <h2>Do I need the gym this week?</h2>
-    <div class="status">
-      <div class="chip"><span id="dotG1" class="dot no"></span> Legs session 1 <span id="txtG1" style="color:var(--muted);font-weight:500"></span></div>
-      <div class="chip"><span id="dotG2" class="dot no"></span> Legs session 2 <span id="txtG2" style="color:var(--muted);font-weight:500"></span></div>
-      <button class="btn" onclick="newWeek()">Start new week</button>
-    </div>
-    <div id="gymBanner" class="banner warn"></div>
-    <div class="foot" style="text-align:left;margin-top:10px">
-      Going to the gym more often (e.g. mornings)? Great — <b>every session has a Gym version</b>, so you can train <b>chest, biceps and delts at the gym too</b> (barbell/cable/machine), not just legs & back. Just tap <b>🏋️ Gym</b> on that day. Gym versions use your machines — Leg Ext/Curl (PL9019), Lat Pulldown/Row (PL9002), Multi Press (PL9021) — plus barbell/cable/dumbbell; Home versions use dumbbells + bench. The two <b>Legs sessions</b> below just track that you hit lower body twice a week — do them wherever you like.
-    </div>
-  </section>
-
   <!-- WEEK -->
   <section>
-    <h2 style="font-size:15px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:0 0 12px 2px">This Week</h2>
+    <div class="row" style="justify-content:space-between;align-items:center;margin:0 2px 12px">
+      <h2 style="font-size:15px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:0">This Week</h2>
+      <button class="btn" onclick="newWeek()">Start new week</button>
+    </div>
+    <div class="foot" style="text-align:left;margin:0 2px 12px">
+      🖐️ <b>Wrist-friendly setup:</b> every gym session now uses <b>machines, cables and the EZ-bar</b> instead of dumbbells — the machine supports the load so your wrist doesn't stabilise it. Keep the wrist <b>straight (neutral), never bent back</b>, use a <b>rope or neutral grip</b> where you can, and stop a set if it pinches. Days default to <b>🏋️ Gym</b>; the Home version is only a fallback.
+    </div>
     <div id="week" class="week"></div>
   </section>
 
@@ -455,6 +447,21 @@ const EX_QUERY={
   "Single-Leg DB RDL":"single leg romanian deadlift dumbbell",
   "Plank":"plank exercise",
   "Lying Leg Raise":"lying leg raise",
+  "Leg Press":"leg press machine",
+  "Leg Press — machine":"leg press machine",
+  "Leg Press — feet high":"leg press high foot placement glutes",
+  "Neutral-Grip Lat Pulldown":"neutral grip lat pulldown",
+  "Pec Deck / Cable Fly":"pec deck chest fly",
+  "Pec Deck":"pec deck chest fly",
+  "Rope Overhead Extension — cable":"cable rope overhead triceps extension",
+  "Rope Overhead Extension":"cable rope overhead triceps extension",
+  "Rope Triceps Pushdown — cable":"rope triceps pushdown",
+  "Rope Triceps Pushdown":"rope triceps pushdown",
+  "EZ-Bar Curl":"ez bar biceps curl",
+  "Rope Hammer Curl — cable":"rope hammer curl",
+  "Underhand-Grip Pulldown":"underhand grip lat pulldown",
+  "Chest Press":"machine chest press",
+  "Incline Press":"incline machine chest press",
   "Leg Extension":"leg extension machine",
   "Leg Curl":"seated leg curl machine",
   "Lat Pulldown":"lat pulldown",
@@ -506,10 +513,10 @@ const WORKOUTS = {
     title:"Legs · Back · Shoulders A", focus:"GYM · leg priority (compound first)", home:false, gymDay:true,
     parts:["quads","hams","glutes","back","shoulders"],
     exercises:[
-      ex("DB Goblet Squat — slow 3s + pause","DB Goblet Squat — slow 3s + pause","4 × 12-15",["quads","glutes"],"goblet squat"),
+      ex("DB Goblet Squat — slow 3s + pause","Leg Press — machine","4 × 10-15",["quads","glutes"],"leg press machine"),
       ex("DB Bulgarian Split Squat","Leg Extension — PLAMAX PL9019","3 × 12-15",["quads"],"leg extension machine"),
       ex("DB Romanian Deadlift","Leg Curl — PLAMAX PL9019","4 × 12-15",["hams"],"leg curl machine"),
-      ex("DB Pullover","Lat Pulldown — PLAMAX PL9002","4 × 8-12",["back"],"lat pulldown"),
+      ex("DB Pullover","Neutral-Grip Lat Pulldown — PL9002","4 × 8-12",["back"],"neutral grip lat pulldown"),
       ex("One-Arm DB Row","Seated Row — PLAMAX PL9002","3 × 10-12",["back","traps"],"seated row machine"),
       ex("Seated DB Shoulder Press","Shoulder Press — Multi Press PL9021","3 × 8-12",["shoulders"],"machine shoulder press")
     ]
@@ -518,9 +525,9 @@ const WORKOUTS = {
     title:"Legs · Back · Shoulders B", focus:"GYM · back/shoulder priority (compound first)", home:false, gymDay:true,
     parts:["quads","hams","glutes","back","shoulders"],
     exercises:[
-      ex("DB Bulgarian Split Squat — slow + pause","DB Bulgarian Split Squat — slow + pause","4 × 10-12 each",["quads","glutes"],"bulgarian split squat"),
+      ex("DB Bulgarian Split Squat — slow + pause","Leg Press — feet high (glutes/hams)","4 × 10-15",["quads","glutes"],"leg press foot placement glutes"),
       ex("DB Romanian Deadlift","Leg Curl — PLAMAX PL9019","4 × 12-15",["hams"],"leg curl machine"),
-      ex("DB Pullover","Lat Pulldown — PLAMAX PL9002","4 × 8-12",["back"],"lat pulldown"),
+      ex("DB Pullover","Wide-Grip Lat Pulldown — PL9002","4 × 8-12",["back"],"wide grip lat pulldown"),
       ex("Chest-Supported DB Row","Seated Row — PLAMAX PL9002","4 × 10-12",["back","traps"],"seated row machine"),
       ex("Seated DB Shoulder Press","Shoulder Press — Multi Press PL9021","4 × 8-12",["shoulders"],"machine shoulder press"),
       ex("DB Goblet Squat","Leg Extension — PLAMAX PL9019","3 × 12-15",["quads"],"leg extension machine")
@@ -532,9 +539,9 @@ const WORKOUTS = {
     exercises:[
       ex("DB Bench Press","Chest Press — Multi Press PL9021","4 × 8-12",["chest"],"dumbbell bench press"),
       ex("Incline DB Press","Incline Press — Multi Press PL9021","3 × 10-12",["chest","shoulders"],"incline dumbbell press"),
-      ex("DB Fly (on bench)","DB Fly (on bench)","3 × 12-15",["chest"],"dumbbell fly"),
-      ex("Overhead DB Triceps Extension","Overhead DB Triceps Extension","3 × 10-12",["triceps"],"overhead dumbbell triceps extension"),
-      ex("DB Skull Crusher (on bench)","DB Skull Crusher (on bench)","3 × 10-12",["triceps"],"dumbbell skull crusher"),
+      ex("DB Fly (on bench)","Pec Deck / Cable Fly","3 × 12-15",["chest"],"pec deck chest fly"),
+      ex("Overhead DB Triceps Extension","Rope Overhead Extension — cable","3 × 10-12",["triceps"],"cable rope overhead triceps extension"),
+      ex("DB Skull Crusher (on bench)","Rope Triceps Pushdown — cable","3 × 10-12",["triceps"],"rope triceps pushdown"),
       ex("Plank — optional core (2 min)","Plank","2 × 30-45 sec",["abs"],"plank exercise")
     ]
   },
@@ -553,7 +560,7 @@ const WORKOUTS = {
     title:"Chest & Back", focus:"Home · push/pull (DB)", home:true,
     parts:["chest","back","traps"],
     exercises:[
-      ex("Incline DB Press","Incline Barbell Press","4 × 8-12",["chest","shoulders"]),
+      ex("Incline DB Press","Incline Press — Multi Press PL9021","4 × 8-12",["chest","shoulders"],"incline machine chest press"),
       ex("One-Arm DB Row","Seated Cable Row","4 × 8-12",["back"]),
       ex("DB Fly (on bench)","Cable Fly","3 × 12-15",["chest"]),
       ex("DB Pullover","Lat Pulldown","3 × 10-12",["back"]),
@@ -575,11 +582,11 @@ const WORKOUTS = {
     title:"Biceps & Delts", focus:"Home · biceps + side/rear delts", home:true,
     parts:["biceps","shoulders"],
     exercises:[
-      ex("DB Biceps Curl","DB Biceps Curl","4 × 10-12",["biceps"],"dumbbell biceps curl"),
-      ex("DB Hammer Curl","DB Hammer Curl","3 × 10-12",["biceps"],"dumbbell hammer curl"),
-      ex("DB Incline Curl (on bench)","Underhand-Grip Pulldown — PL9002 (biceps)","3 × 10-12",["biceps"],"incline dumbbell curl"),
-      ex("DB Lateral Raise","DB Lateral Raise","4 × 12-20",["shoulders"],"dumbbell lateral raise"),
-      ex("DB Rear-Delt Fly (on bench)","DB Rear-Delt Fly (on bench)","3 × 15-20",["shoulders"],"dumbbell rear delt fly"),
+      ex("DB Biceps Curl","EZ-Bar Curl","4 × 10-12",["biceps"],"ez bar biceps curl"),
+      ex("DB Hammer Curl","Rope Hammer Curl — cable","3 × 10-12",["biceps"],"rope hammer curl"),
+      ex("DB Incline Curl (on bench)","Underhand-Grip Pulldown — PL9002 (biceps)","3 × 10-12",["biceps"],"underhand grip lat pulldown"),
+      ex("DB Lateral Raise","Cable Lateral Raise","4 × 12-20",["shoulders"],"cable lateral raise"),
+      ex("DB Rear-Delt Fly (on bench)","Reverse Pec Deck","3 × 15-20",["shoulders"],"reverse pec deck"),
       ex("Lying Leg Raise — optional core (2 min)","Lying Leg Raise — optional core (2 min)","2 × 15",["abs"],"lying leg raise")
     ]
   }
@@ -707,7 +714,7 @@ function todayPick(){
   const logged=S.history[ds];
   if(logged) return {key:logged.key, loc:logged.loc, logged:true};
   const plan=buildPlan(); const planType=plan.typeMap[today];
-  const loc=S.loc[ds] || (planType==='gym'?'gym':'home');
+  const loc=S.loc[ds] || 'gym';   // gym-first: that's where you train now
   // Same muscle group either way — the Home/Gym choice only swaps exercise variants.
   const key = (planType==='gym') ? gymVariantThisWeek() : (HOME_KEY[planType]||'chestTri');
   return {key, loc, logged:false};
@@ -908,8 +915,8 @@ function renderWeek(){
     const w=WORKOUTS[key];
     const isGym = typeOfKey(key)==='gym';
     const done = !!S.history[did];
-    const loc = done ? (S.history[did].loc || (isGym?'gym':'home'))
-                     : (S.loc[did] || (isGym?'gym':'home'));
+    const loc = done ? (S.history[did].loc || 'gym')
+                     : (S.loc[did] || 'gym');   // gym-first default
     const pill = loc==='gym'?'<span class="pill gym">Gym</span>':'<span class="pill home">Home</span>';
     const doneFlag = done ? '<span class="sdone">✓ done</span>' : '';
     det.innerHTML=`
@@ -929,36 +936,8 @@ function renderWeek(){
       </div>`;
     wk.appendChild(det);
   }
-  renderGymStatus();
 }
 
-function renderGymStatus(){
-  // completed Legs·Back·Shoulders sessions this week, either location
-  const sess=[];
-  for(let d=0; d<7; d++){
-    if(isRest(d)) continue;
-    const h=S.history[dateStrOf(d)];
-    if(h && typeOfKey(h.key)==='gym') sess.push(h.loc||'gym');
-  }
-  const done=sess.length, atGym=sess.filter(l=>l==='gym').length;
-  setDot('dotG1', done>=1); setTx('txtG1', done>=1?(sess[0]==='gym'?'✓ gym':'✓ home'):'· to do');
-  setDot('dotG2', done>=2); setTx('txtG2', done>=2?(sess[1]==='gym'?'✓ gym':'✓ home'):'· to do');
-  const b=document.getElementById('gymBanner');
-  if(done>=2){
-    b.className='banner ok';
-    b.innerHTML = atGym>=2
-      ? '✅ Both <b>Legs · Back · Shoulders</b> sessions done at the gym. The rest of your week is home-based — no more gym trips needed.'
-      : '✅ Both <b>Legs · Back · Shoulders</b> sessions done ('+atGym+' gym · '+(done-atGym)+' home). The rest of your week is home-based.';
-  }else if(done===1){
-    b.className='banner ok';
-    b.innerHTML='✅ 1 of 2 <b>Legs · Back · Shoulders</b> sessions done'+(sess[0]==='home'?' (at home)':'')+'. One more to go — gym if you can, or flip it to <b>Home</b> for the same session with dumbbells.';
-  }else{
-    b.className='banner warn';
-    b.innerHTML='⚠️ Plan <b>2 Legs · Back · Shoulders sessions</b> this week — gym is best (heavy legs + lat pulldown), but any of them can be flipped to <b>Home</b> for the dumbbell + bench version.';
-  }
-  function setDot(id,ok){ const el=document.getElementById(id); if(el) el.className='dot '+(ok?'ok':'no'); }
-  function setTx(id,t){ const el=document.getElementById(id); if(el) el.textContent=t; }
-}
 function set(id,v){ const el=document.getElementById(id); if(el) el.textContent=v; }
 
 /* ============ EXERCISE QUICK-LOOK ============ */
@@ -1168,7 +1147,7 @@ function skipToday(){ const ds=dateStrOf(todayDow()); S.history[ds]={key:'skip',
 function skipDay(d){ const ds=dateStrOf(d); S.history[ds]={key:'skip', loc:'skip'}; save(); renderWeek(); renderProgress(); }
 function toggleDone(d,c){
   const ds=dateStrOf(d); const map=buildPlan().map;
-  if(c){ const key=map[d]; const loc=S.loc[ds] || (typeOfKey(key)==='gym'?'gym':'home'); S.history[ds]={key, loc}; }
+  if(c){ const key=map[d]; const loc=S.loc[ds] || 'gym'; S.history[ds]={key, loc}; }
   else { delete S.history[ds]; }
   save(); renderWeek(); renderProgress();
 }
