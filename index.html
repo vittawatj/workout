@@ -281,6 +281,13 @@
         <label class="ctl">Usual gym day &nbsp;</label>
         <select id="gymDaySel" onchange="setGymDay(this.value)"></select>
       </div>
+      <div>
+        <label class="ctl">🖐️ Wrist-friendly mode &nbsp;</label>
+        <select id="wristSel" onchange="setWrist(this.value)">
+          <option value="1">On — protect wrist</option>
+          <option value="0">Off — normal grip</option>
+        </select>
+      </div>
       <div class="legend">
         <span><span class="dot" style="background:var(--home)"></span> Home OK (DB + bench)</span>
         <span><span class="dot" style="background:var(--gym)"></span> Gym better</span>
@@ -298,9 +305,7 @@
       <h2 style="font-size:15px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:0">This Week</h2>
       <button class="btn" onclick="newWeek()">Start new week</button>
     </div>
-    <div class="foot" style="text-align:left;margin:0 2px 12px">
-      🖐️ <b>Wrist-friendly setup:</b> every gym session now uses <b>machines, cables and the EZ-bar</b> instead of dumbbells — the machine supports the load so your wrist doesn't stabilise it. Keep the wrist <b>straight (neutral), never bent back</b>, use a <b>rope or neutral grip</b> where you can, and stop a set if it pinches. Days default to <b>🏋️ Gym</b>; the Home version is only a fallback.
-    </div>
+    <div class="foot" style="text-align:left;margin:0 2px 12px" id="wristNote"></div>
     <div id="week" class="week"></div>
   </section>
 
@@ -447,6 +452,19 @@ const EX_QUERY={
   "Single-Leg DB RDL":"single leg romanian deadlift dumbbell",
   "Plank":"plank exercise",
   "Lying Leg Raise":"lying leg raise",
+  "Lat Pulldown — PL9002 + lifting straps":"lat pulldown with lifting straps",
+  "Lat Pulldown — PL9002 + straps":"lat pulldown with lifting straps",
+  "Seated Row — PL9002 + lifting straps":"seated cable row with straps",
+  "Cable Curl — wrist cuffs":"cable curl wrist cuff",
+  "Cable Curl — wrist cuffs, palms up":"cable curl wrist cuff",
+  "Triceps Pushdown — wrist cuff / thumbless":"triceps pushdown thumbless grip",
+  "Triceps Pushdown — thumbless grip":"triceps pushdown thumbless grip",
+  "Cable Lateral Raise — wrist cuff":"cable lateral raise wrist cuff",
+  "Machine Shoulder Press — thumbless":"machine shoulder press",
+  "Seated Cable Row — lifting straps":"seated cable row with straps",
+  "Lat Pulldown — lifting straps":"lat pulldown with lifting straps",
+  "Reverse Pec Deck — forearm pads":"reverse pec deck",
+  "Pec Deck — forearm pads":"pec deck chest fly",
   "Leg Press":"leg press machine",
   "Leg Press — machine":"leg press machine",
   "Leg Press — feet high":"leg press high foot placement glutes",
@@ -592,6 +610,43 @@ const WORKOUTS = {
   }
 };
 
+/* ---------- WRIST MODE (De Quervain's / wrist tendonitis) ----------
+   Temporary swap layer. The weekly plan and muscle groups never change —
+   only the gym exercise variant does, so nothing needs rebuilding later.
+   Principle: De Quervain's is provoked by GRIPPING and THUMB load, not by
+   heavy weight. Straps, wrist cuffs and pad-based machines take the hand
+   out of the movement so you can keep training the muscle hard. */
+const WRIST_SWAP = {
+  // pulling — straps carry the load instead of your fingers/thumb
+  "Neutral-Grip Lat Pulldown — PL9002":"Lat Pulldown — PL9002 + lifting straps",
+  "Wide-Grip Lat Pulldown — PL9002":"Lat Pulldown — PL9002 + lifting straps",
+  "Lat Pulldown — PLAMAX PL9002":"Lat Pulldown — PL9002 + lifting straps",
+  "Seated Row — PLAMAX PL9002":"Seated Row — PL9002 + lifting straps",
+  "Underhand-Grip Pulldown — PL9002 (biceps)":"Lat Pulldown — PL9002 + straps (biceps)",
+  // biceps — NO thumb-up/neutral work; cuff removes the grip entirely
+  "EZ-Bar Curl":"Cable Curl — wrist cuffs (no grip)",
+  "Rope Hammer Curl — cable":"Cable Curl — wrist cuffs, palms up",
+  "Rope Hammer Curl":"Cable Curl — wrist cuffs, palms up",
+  "Cable Hammer Curl":"Cable Curl — wrist cuffs, palms up",
+  "EZ-Bar / Cable Curl":"Cable Curl — wrist cuffs (no grip)",
+  "Cable Curl":"Cable Curl — wrist cuffs (no grip)",
+  "Cable Overhead Extension":"Triceps Pushdown — thumbless grip",
+  "Machine Shoulder Press":"Machine Shoulder Press — thumbless, light grip",
+  "Seated Cable Row":"Seated Cable Row — lifting straps",
+  "Lat Pulldown":"Lat Pulldown — lifting straps",
+  "Cable Fly":"Pec Deck — forearm pads (no grip)",
+  // triceps — rope needs grip; cuff/thumbless pushdown does not
+  "Rope Overhead Extension — cable":"Triceps Pushdown — wrist cuff / thumbless",
+  "Rope Triceps Pushdown — cable":"Triceps Pushdown — thumbless grip",
+  // delts / chest — pad-based, no hand load
+  "Cable Lateral Raise":"Cable Lateral Raise — wrist cuff (no grip)",
+  "Reverse Pec Deck":"Reverse Pec Deck — forearm pads",
+  "Pec Deck / Cable Fly":"Pec Deck — forearm pads (no grip)",
+  // legs — fine already, just don't death-grip the handles
+  "Leg Press — machine":"Leg Press — machine (rest hands, don't grip)",
+  "Leg Press — feet high (glutes/hams)":"Leg Press — feet high (rest hands)"
+};
+function applyWrist(name){ return (S.wrist && WRIST_SWAP[name]) ? WRIST_SWAP[name] : name; }
 const DOW = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 // session "type" → workout key. gym alternates A/B for variety.
 const HOME_KEY = {chest:'chestTri', biceps:'bicepsArms'};
@@ -768,7 +823,9 @@ function renderSetup(){
   if(sel2){ sel2.innerHTML='<option value="-1">None (6-day week)</option>'+DOW.map((d,i)=>`<option value="${i}" ${S.restDay2===i?'selected':''}>${d}</option>`).join(''); }
   const gsel=document.getElementById('gymDaySel');
   if(gsel){ gsel.innerHTML='<option value="-1">No fixed day</option>'+DOW.map((d,i)=>`<option value="${i}" ${S.gymDay===i?'selected':''}>${d}</option>`).join(''); }
+  const wsel=document.getElementById('wristSel'); if(wsel) wsel.value = S.wrist ? '1' : '0';
 }
+function setWrist(v){ S.wrist=(v==='1'||v===true); save(); renderSetup(); renderWeek(); }
 function setGymDay(v){
   const n=parseInt(v,10);
   S.gymDay = (n<0)?null:n;
@@ -788,7 +845,7 @@ function exListHTML(key, loc){
   const w=WORKOUTS[key]; let html=''; const lifts=S.lifts||{};
   w.exercises.forEach((e)=>{
     const showGym = loc==='gym';
-    const nm = showGym? e.gym : e.home;
+    const nm = showGym ? applyWrist(e.gym) : e.home;
     const last = lifts[nm]||'';
     const vq = showGym ? e.gym.split('—')[0].trim() : (e.q||e.home);
     html+=`<div class="ex">
@@ -827,7 +884,14 @@ function overloadHint(nm){
   }
   return `<div class="ovl">last: ${recent.join(' → ')} kg${tip}</div>`;
 }
+function renderWristNote(){
+  const el=document.getElementById('wristNote'); if(!el) return;
+  el.innerHTML = S.wrist
+    ? '🖐️ <b>Wrist-friendly mode is ON.</b> De Quervain\'s is provoked by <b>gripping and thumb load</b>, not by heavy weight — so pulls use <b>lifting straps</b>, curls and raises use <b>wrist cuffs</b>, and chest/rear-delt use <b>pad machines</b>. Keep the wrist <b>straight</b>, avoid thumb-up (hammer) positions, and stop a set if it pinches. Turn this off in <b>Profile → Setup</b> when your wrist is better — your normal plan comes straight back.'
+    : '💪 <b>Normal mode.</b> Standard gym versions (EZ-bar, ropes, machines). Switch on <b>Wrist-friendly mode</b> in Profile → Setup any time the wrist flares up.';
+}
 function renderWeek(){
+  renderWristNote();
   const plan=buildPlan(); const map=plan.map; const wk=document.getElementById('week'); wk.innerHTML='';
   const td=todayDow();
   for(let d=0; d<7; d++){
@@ -1252,6 +1316,7 @@ function normalize(){
   if(!S.deloadStart)S.deloadStart=todayKey(); if(!S.checkins)S.checkins={}; if(!S.lifts)S.lifts={};
   if(!S.liftHist)S.liftHist={};
   if(!S.tab)S.tab='workout';
+  if(S.wrist===undefined)S.wrist=true;   // wrist-friendly mode on while the tendon settles
   if(S.gymDay===undefined)S.gymDay=6;   // default: usual gym day = Sunday (legs)
   // a day can't be both rest and gym — if they collide, shift rest mid-week
   if(S.gymDay!=null && S.gymDay===S.restDay) S.restDay=(S.gymDay+3)%7;
