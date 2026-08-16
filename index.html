@@ -281,14 +281,6 @@
         <label class="ctl">Usual gym day &nbsp;</label>
         <select id="gymDaySel" onchange="setGymDay(this.value)"></select>
       </div>
-      <div>
-        <label class="ctl">Daily protein goal (g) &nbsp;</label>
-        <input id="proteinGoal" type="number" min="0" step="5" style="width:90px" onchange="setGoal(this.value)">
-      </div>
-      <div>
-        <label class="ctl">Daily creatine goal (g) &nbsp;</label>
-        <input id="creatineGoal" type="number" min="0" step="0.5" style="width:80px" onchange="setCGoal(this.value)">
-      </div>
       <div class="legend">
         <span><span class="dot" style="background:var(--home)"></span> Home OK (DB + bench)</span>
         <span><span class="dot" style="background:var(--gym)"></span> Gym better</span>
@@ -322,83 +314,7 @@
 
   </div><!-- /workout tab -->
 
-  <!-- ===== NUTRITION TAB ===== -->
-  <div class="tab" id="tab-nutrition">
-  <!-- PROTEIN -->
-  <section class="panel">
-    <h2>Protein today — <span id="todayLabel" style="color:var(--txt)"></span></h2>
-    <div class="prot-top">
-      <div class="ring-wrap">
-        <div class="pnum"><span id="pEaten">0</span><small>g</small></div>
-        <div class="pgoal">of goal <b id="pGoalLabel">0</b> g · <span id="pLeft">0</span> g to go</div>
-      </div>
-    </div>
-    <div class="pbar"><i id="pFill"></i></div>
-    <div class="quick">
-      <button onclick="addProtein(10)">+10</button>
-      <button onclick="addProtein(20)">+20</button>
-      <button onclick="addProtein(25)">+25</button>
-      <button onclick="addProtein(30)">+30</button>
-      <button onclick="addProtein(40)">+40</button>
-      <input id="customP" type="number" min="0" placeholder="custom g" style="width:100px">
-      <button class="btn accent" onclick="addCustom()">Add</button>
-    </div>
-    <div class="recnote" id="pRec"></div>
-    <div id="pLog" class="log"></div>
-  </section>
-
-  <!-- CREATINE -->
-  <section class="panel">
-    <h2>Creatine today — <span id="cTodayLabel" style="color:var(--txt)"></span></h2>
-    <div class="prot-top">
-      <div class="ring-wrap">
-        <div class="pnum"><span id="cTaken">0</span><small>g</small></div>
-        <div class="pgoal">of goal <b id="cGoalLabel">5</b> g · <span id="cLeft">5</span> g to go</div>
-      </div>
-    </div>
-    <div class="pbar"><i id="cFill" style="background:linear-gradient(90deg,var(--accent2),var(--good))"></i></div>
-    <div class="quick">
-      <button onclick="addCreatine(2.5)">+2.5</button>
-      <button onclick="addCreatine(3)">+3</button>
-      <button onclick="addCreatine(5)">+5</button>
-      <input id="customC" type="number" min="0" step="0.5" placeholder="custom g" style="width:100px">
-      <button class="btn accent" onclick="addCustomC()">Add</button>
-    </div>
-    <div class="recnote" id="cRec"></div>
-    <div class="foot" style="text-align:left;margin-top:10px">3–5 g daily is the standard maintenance dose — timing doesn't matter, just take it consistently every day, including rest days.</div>
-    <div id="cLog" class="log"></div>
-  </section>
-
-  <!-- VITAMINS -->
-  <section class="panel">
-    <h2>Vitamins / Supplements — <span id="vTodayLabel" style="color:var(--txt)"></span></h2>
-    <button id="vBtn" class="trainbtn" onclick="toggleVitamin()">✓ Took my vitamins today</button>
-    <div style="margin-top:12px">
-      <label class="ctl">What I take (note):</label>
-      <input id="vNote" type="text" placeholder="e.g. Vitamin D, Omega-3, Multivitamin" style="width:100%;margin-top:6px" onchange="setVitNote(this.value)">
-    </div>
-    <div class="recnote" id="vRec" style="margin-top:10px"></div>
-  </section>
-
-  <!-- WATER -->
-  <section class="panel">
-    <h2>Water today — <span id="wTodayLabel" style="color:var(--txt)"></span></h2>
-    <div class="prot-top">
-      <div class="ring-wrap">
-        <div class="pnum"><span id="waterMl">0</span><small>ml</small></div>
-        <div class="pgoal">of goal <b id="waterGoalLabel">0</b> ml · <span id="waterLeft">0</span> ml to go</div>
-      </div>
-    </div>
-    <div class="pbar"><i id="waterFill" style="background:linear-gradient(90deg,#4dabff,#37c871)"></i></div>
-    <div class="quick">
-      <button onclick="addWater(250)">+1 glass (250)</button>
-      <button onclick="addWater(500)">+ bottle (500)</button>
-      <button onclick="addWater(-250)">− undo</button>
-    </div>
-    <div class="recnote" id="waterRec"></div>
-  </section>
-  </div><!-- /nutrition tab -->
-
+  
   <!-- ===== PROGRESS TAB ===== -->
   <div class="tab" id="tab-progress">
   <!-- DELOAD -->
@@ -468,7 +384,6 @@
 <!-- bottom tab bar -->
 <nav class="tabbar" id="tabbar">
   <button data-t="workout" class="on" onclick="showTab('workout')"><span class="ic">🏋️</span>Workout</button>
-  <button data-t="nutrition" onclick="showTab('nutrition')"><span class="ic">🥗</span>Nutrition</button>
   <button data-t="progress" onclick="showTab('progress')"><span class="ic">📈</span>Progress</button>
   <button data-t="profile" onclick="showTab('profile')"><span class="ic">👤</span>Profile</button>
 </nav>
@@ -511,7 +426,76 @@ function bodySVG(parts, w, h){
    </g>
   </svg>`;
 }
-function yt(q){ return 'https://www.youtube.com/results?search_query='+encodeURIComponent(q+' proper form'); }
+/* Turn an exercise label into a clean, accurate video search.
+   Strips coaching notes ("— slow 3s + pause", "(on bench)", machine codes) and
+   expands abbreviations, so the results actually match the movement. */
+const EX_QUERY={
+  "DB Goblet Squat":"dumbbell goblet squat",
+  "DB Bulgarian Split Squat":"dumbbell bulgarian split squat",
+  "DB Romanian Deadlift":"dumbbell romanian deadlift",
+  "DB Step-Up":"dumbbell step up exercise",
+  "DB Pullover":"dumbbell pullover",
+  "One-Arm DB Row":"one arm dumbbell row",
+  "Chest-Supported DB Row":"chest supported dumbbell row",
+  "DB Calf Raise":"dumbbell calf raise",
+  "DB Bench Press":"dumbbell bench press",
+  "Incline DB Press":"incline dumbbell press",
+  "DB Fly":"dumbbell chest fly",
+  "Overhead DB Triceps Extension":"dumbbell overhead triceps extension",
+  "DB Skull Crusher":"dumbbell skull crusher",
+  "Seated DB Shoulder Press":"seated dumbbell shoulder press",
+  "DB Arnold Press":"arnold press dumbbell",
+  "DB Lateral Raise":"dumbbell lateral raise",
+  "DB Rear-Delt Fly":"dumbbell rear delt fly",
+  "DB Reverse Fly":"dumbbell reverse fly",
+  "DB Biceps Curl":"dumbbell biceps curl",
+  "DB Hammer Curl":"dumbbell hammer curl",
+  "DB Incline Curl":"incline dumbbell curl",
+  "DB Glute Bridge":"dumbbell glute bridge",
+  "Single-Leg DB RDL":"single leg romanian deadlift dumbbell",
+  "Plank":"plank exercise",
+  "Lying Leg Raise":"lying leg raise",
+  "Leg Extension":"leg extension machine",
+  "Leg Curl":"seated leg curl machine",
+  "Lat Pulldown":"lat pulldown",
+  "Wide-Grip Lat Pulldown":"wide grip lat pulldown",
+  "Seated Row":"seated cable row",
+  "Seated Cable Row":"seated cable row",
+  "Shoulder Press":"machine shoulder press",
+  "Machine Shoulder Press":"machine shoulder press",
+  "Cable Lateral Raise":"cable lateral raise",
+  "Rope Pushdown":"rope triceps pushdown",
+  "Cable Overhead Extension":"cable overhead triceps extension",
+  "Cable Fly / Pec Deck":"pec deck chest fly",
+  "Reverse Pec Deck":"reverse pec deck",
+  "Face Pull (cable)":"cable face pull",
+  "Barbell Bench Press":"barbell bench press",
+  "Incline Barbell Press":"incline barbell bench press",
+  "Barbell Back Squat":"barbell back squat",
+  "Barbell Romanian Deadlift":"barbell romanian deadlift",
+  "Leg Press":"leg press machine",
+  "Hip Thrust":"barbell hip thrust",
+  "Hack Squat":"hack squat machine",
+  "EZ-Bar / Cable Curl":"ez bar biceps curl",
+  "Cable Curl":"cable biceps curl",
+  "Rope Hammer Curl":"rope hammer curl",
+  "Cable Hammer Curl":"cable hammer curl",
+  "Standing Calf Raise":"standing calf raise",
+  "Hanging Leg Raise":"hanging leg raise",
+  "T-Bar Row":"t bar row",
+  "Chest-Supported / T-Bar Row":"chest supported row machine"
+};
+function cleanQuery(name){
+  let s=String(name||'');
+  s=s.split('—')[0];                       // drop coaching note after em-dash
+  s=s.replace(/\([^)]*\)/g,' ');           // drop "(on bench)", "(cable)" etc.
+  s=s.replace(/\s+/g,' ').trim();
+  if(EX_QUERY[s]) return EX_QUERY[s];
+  // fall back: expand common shorthand so search results are accurate
+  s=s.replace(/\bDB\b/g,'dumbbell').replace(/\bRDL\b/gi,'romanian deadlift');
+  return s.toLowerCase();
+}
+function yt(q){ return 'https://www.youtube.com/results?search_query='+encodeURIComponent(cleanQuery(q)+' exercise how to'); }
 
 /* ============ DATA: exercises ============ */
 // each exercise: name(home), gymName, sets/reps, muscle tokens, ytQuery
@@ -647,31 +631,50 @@ function buildPlan(){
   days.forEach(d=>{ if(comp[d] && target[comp[d].type]!=null) target[comp[d].type]--; });
   Object.keys(target).forEach(k=>{ if(target[k]<0) target[k]=0; });
   let gymCount=0; days.forEach(d=>{ if(comp[d] && comp[d].type==='gym') gymCount++; });
-  const rank={gym:0,chest:1,biceps:2};
   const typeMap={};
+  // how many days since each muscle group was ACTUALLY trained (looks back 4 weeks).
+  // Bigger = more overdue = gets scheduled sooner. This is what re-balances after a skip.
+  const t0=new Date(); t0.setHours(0,0,0,0);
+  const lastDone={gym:-1, chest:-1, biceps:-1};
+  for(let back=0; back<28; back++){
+    const h=S.history[iso(addDays(t0,-back))];
+    if(!h) continue;
+    const t=typeOfKey(h.key);
+    if(lastDone[t]!=null && lastDone[t]<0) lastDone[t]=back;
+  }
+  const overdue=t=> (lastDone[t]<0 ? 99 : lastDone[t]);
+  // neighbour type (rest days break the chain and give recovery, so they return null)
+  function neighborType(d,delta){
+    const n=d+delta;
+    if(n<0){ const h=S.history[iso(addDays(curMonday(),-1))]; return h?typeOfKey(h.key):null; } // last week's Sunday
+    if(n>6) return null;
+    if(isRest(n)) return null;
+    return typeMap[n] || (comp[n]&&comp[n].type) || null;
+  }
   // honor a preferred "usual gym day" — reserve a gym session there
   if(S.gymDay!=null && !isRest(S.gymDay) && !comp[S.gymDay] && target.gym>0){
     typeMap[S.gymDay]='gym'; target.gym--; gymCount++;
   }
-  days.forEach(d=>{
+  // Assign TODAY and the days ahead first, so anything you skipped/missed gets
+  // pushed forward onto the days you can still train. Past days fill in last.
+  const td=todayDow();
+  const order=days.filter(d=>d>=td).concat(days.filter(d=>d<td));
+  order.forEach(d=>{
     if(comp[d]){ typeMap[d]=comp[d].type; return; }
     if(typeMap[d]) return;   // already reserved (preferred gym day)
-    let prev=null;
-    if(d===0){ const h=S.history[iso(addDays(curMonday(),-1))]; prev=h?typeOfKey(h.key):null; }  // Monday looks at last week's Sunday
-    else { const pd=d-1; prev=isRest(pd)?null:(typeMap[pd] || (comp[pd]&&comp[pd].type) || null); }
+    const prev=neighborType(d,-1), next=neighborType(d,1);
     let cands=['gym','chest','biceps'].filter(t=>target[t]>0);
     if(cands.length===0) cands=['chest','biceps'];          // bonus home days once targets met
-    cands=cands.filter(t=>{
-      if(t===prev) return false;                            // no same type 2 days running
-      if(t==='gym' && (prev==='gym' || gymCount>=2)) return false; // gym ≤2/wk, not consecutive
+    let ok=cands.filter(t=>{
+      if(t===prev || t===next) return false;                // no same muscle 2 days running (either side)
+      if(t==='gym' && (prev==='gym' || next==='gym' || gymCount>=2)) return false; // gym ≤2/wk, never back-to-back
       return true;
     });
-    if(cands.length===0){
-      cands=['chest','biceps','gym'].filter(t=> t!==prev && !(t==='gym'&&(prev==='gym'||gymCount>=2)));
-      if(cands.length===0) cands=[ prev==='chest'?'biceps':'chest' ];
-    }
-    cands.sort((a,b)=> ((target[b]||0)-(target[a]||0)) || (rank[a]-rank[b]));
-    const pick=cands[0];
+    if(ok.length===0) ok=['chest','biceps'].filter(t=> t!==prev && t!==next);
+    if(ok.length===0) ok=[ prev==='chest'?'biceps':'chest' ];
+    // most-needed first: remaining weekly target, then whichever muscle is most overdue
+    ok.sort((a,b)=> ((target[b]||0)-(target[a]||0)) || (overdue(b)-overdue(a)) );
+    const pick=ok[0];
     typeMap[d]=pick;
     if(target[pick]!=null && target[pick]>0) target[pick]--;
     if(pick==='gym') gymCount++;
@@ -744,7 +747,7 @@ function setWeight(v){
   const tk=todayKey(); const e=S.weights.find(x=>x.d===tk);
   if(e) e.kg=kg; else S.weights.push({d:tk, kg});
   S.weights.sort((a,b)=>a.d<b.d?-1:1);
-  save(); renderProfile(); renderProtein(); renderProgress();
+  save(); renderProfile(); renderProgress();
 }
 function setAge(v){ S.age=parseInt(v,10)||S.age; save(); }
 function setLeanGoal(v){ const g=parseFloat(v); if(!g) return; S.wgoal=g; save(); renderProfile(); }
@@ -959,109 +962,6 @@ function renderGymStatus(){
 }
 function set(id,v){ const el=document.getElementById(id); if(el) el.textContent=v; }
 
-/* ============ PROTEIN ============ */
-function renderProtein(){
-  const tk=todayKey();
-  document.getElementById('todayLabel').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
-  const day=S.protein[tk]||{total:0,items:[]};
-  const goal=S.goal||0;
-  document.getElementById('pEaten').textContent=day.total;
-  document.getElementById('pGoalLabel').textContent=goal;
-  document.getElementById('pLeft').textContent=Math.max(0,goal-day.total);
-  const pct=goal>0?Math.min(100,Math.round(day.total/goal*100)):0;
-  document.getElementById('pFill').style.width=pct+'%';
-  const log=document.getElementById('pLog'); log.innerHTML='';
-  if(day.items.length){
-    day.items.forEach((it,i)=>{
-      const row=document.createElement('div'); row.className='item';
-      row.innerHTML=`<span>+${it} g</span><button onclick="delProtein(${i})" title="remove">✕</button>`;
-      log.appendChild(row);
-    });
-  }else{
-    log.innerHTML='<div class="item" style="border:none">No protein logged yet today.</div>';
-  }
-  // recommendation
-  const w=S.weight||77; const lo=Math.round(1.6*w), hi=Math.round(2.2*w), rec=Math.round(2.0*w);
-  const rEl=document.getElementById('pRec');
-  if(rEl) rEl.innerHTML=`Recommended for muscle gain: <b>~${rec} g/day</b> (${lo}–${hi} g, ≈1.6–2.2 g per kg).`+
-    (S.goal!==rec?` <button class="applybtn" onclick="applyProteinRec()">Use ${rec} g</button>`:'')+
-    `<br><b>When to take whey:</b> any time that helps you reach the daily total. A scoop within ~2 h around your workout (before or after) is a good default, but total daily protein matters far more than exact timing.`;
-}
-function applyProteinRec(){ S.goal=Math.round(2.0*(S.weight||77)); save(); renderSetup(); renderProtein(); }
-function addProtein(g){
-  const tk=todayKey(); if(!S.protein[tk])S.protein[tk]={total:0,items:[]};
-  S.protein[tk].total+=g; S.protein[tk].items.push(g); save(); renderProtein();
-}
-function addCustom(){
-  const v=parseInt(document.getElementById('customP').value,10);
-  if(v>0){ addProtein(v); document.getElementById('customP').value=''; }
-}
-function delProtein(i){
-  const tk=todayKey(); const d=S.protein[tk]; if(!d)return;
-  d.total-=d.items[i]; d.items.splice(i,1); if(d.total<0)d.total=0; save(); renderProtein();
-}
-
-/* ============ CREATINE ============ */
-function renderCreatine(){
-  if(!S.creatine) S.creatine={};
-  const tk=todayKey();
-  document.getElementById('cTodayLabel').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
-  const day=S.creatine[tk]||{total:0,items:[]};
-  const goal=(S.cgoal!=null?S.cgoal:5);
-  const tot=Math.round(day.total*10)/10;
-  document.getElementById('cTaken').textContent=tot;
-  document.getElementById('cGoalLabel').textContent=goal;
-  document.getElementById('cLeft').textContent=Math.max(0,Math.round((goal-tot)*10)/10);
-  const pct=goal>0?Math.min(100,Math.round(tot/goal*100)):0;
-  document.getElementById('cFill').style.width=pct+'%';
-  const log=document.getElementById('cLog'); log.innerHTML='';
-  if(day.items.length){
-    day.items.forEach((it,i)=>{
-      const row=document.createElement('div'); row.className='item';
-      row.innerHTML=`<span>+${it} g</span><button onclick="delCreatine(${i})" title="remove">✕</button>`;
-      log.appendChild(row);
-    });
-  }else{
-    log.innerHTML='<div class="item" style="border:none">No creatine logged yet today.</div>';
-  }
-  const rEl=document.getElementById('cRec');
-  if(rEl) rEl.innerHTML='Recommended: <b>5 g/day</b> (3–5 g maintenance; no need to load).'+
-    ((S.cgoal!=null?S.cgoal:5)!==5?' <button class="applybtn" onclick="applyCreatineRec()">Use 5 g</button>':'')+
-    '<br><b>When to take creatine:</b> any time of day — daily consistency is all that matters, not timing. Take it whenever you\'ll remember (post-workout or with a meal is convenient). Stir into water/shake; stay well hydrated.';
-}
-function applyCreatineRec(){ S.cgoal=5; save(); renderSetup(); renderCreatine(); }
-function addCreatine(g){
-  if(!S.creatine) S.creatine={};
-  const tk=todayKey(); if(!S.creatine[tk])S.creatine[tk]={total:0,items:[]};
-  S.creatine[tk].total+=g; S.creatine[tk].items.push(g); save(); renderCreatine();
-}
-function addCustomC(){
-  const v=parseFloat(document.getElementById('customC').value);
-  if(v>0){ addCreatine(v); document.getElementById('customC').value=''; }
-}
-function delCreatine(i){
-  const tk=todayKey(); const d=S.creatine[tk]; if(!d)return;
-  d.total-=d.items[i]; d.items.splice(i,1); if(d.total<0)d.total=0; save(); renderCreatine();
-}
-function setCGoal(v){ S.cgoal=parseFloat(v)||0; save(); renderCreatine(); }
-
-/* ============ VITAMINS ============ */
-function renderVitamins(){
-  if(!S.vit) S.vit={};
-  const tk=todayKey();
-  const lbl=document.getElementById('vTodayLabel');
-  if(lbl) lbl.textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
-  const btn=document.getElementById('vBtn');
-  const took=!!S.vit[tk];
-  if(btn){ btn.textContent = took?'✓ Vitamins taken today — tap to undo':'✓ Took my vitamins today'; btn.className = took?'trainbtn done':'trainbtn'; }
-  const note=document.getElementById('vNote'); if(note) note.value=S.vitNote||'';
-  const rEl=document.getElementById('vRec');
-  if(rEl) rEl.innerHTML='<b>When to take:</b> with your largest meal of the day (morning or lunch). Fat-soluble ones — Vitamin D, Omega-3, Vitamin E/A/K — absorb much better with some dietary fat. This is just a daily check — no dose tracking.';
-}
-function toggleVitamin(){ const tk=todayKey(); if(S.vit[tk]) delete S.vit[tk]; else S.vit[tk]=true; save(); renderVitamins(); }
-function setVitNote(v){ S.vitNote=v; save(); }
-
-
 /* ============ EXERCISE QUICK-LOOK ============ */
 const MUSCLE_LABEL={chest:'Chest',back:'Back / lats',shoulders:'Shoulders',biceps:'Biceps',triceps:'Triceps',quads:'Quads',hams:'Hamstrings',glutes:'Glutes',calves:'Calves',traps:'Upper back',abs:'Abs / core'};
 function showExercise(el){
@@ -1256,7 +1156,6 @@ function setRest2(v){
   if(S.gymDay!=null && S.gymDay===S.restDay2) S.gymDay=null;
   save(); renderSetup(); renderWeek();
 }
-function setGoal(v){ S.goal=parseInt(v,10)||0; save(); renderProtein(); }
 function setDayLoc(d,loc){ S.loc[dateStrOf(d)]=loc; save(); renderWeek(); }
 function setTodayLoc(loc){ setDayLoc(todayDow(), loc); }
 function trainToday(){
@@ -1306,7 +1205,7 @@ function importData(file){
 
 /* ============ TABS ============ */
 function showTab(name){
-  const tabs=['workout','nutrition','progress','profile'];
+  const tabs=['workout','progress','profile'];
   if(tabs.indexOf(name)<0) name='workout';
   S.tab=name; save();
   tabs.forEach(t=>{
@@ -1330,20 +1229,6 @@ function startRest(sec){
   },1000);
 }
 function stopRest(){ clearInterval(_rt); _rt=null; const d=document.getElementById('rtDisp'); d.classList.remove('run'); d.textContent='0:00'; }
-
-/* ============ WATER ============ */
-function renderWater(){
-  if(!S.water)S.water={};
-  const tk=todayKey(); const ml=S.water[tk]||0; const goal=S.waterGoal||2700;
-  const lbl=document.getElementById('wTodayLabel'); if(lbl) lbl.textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
-  document.getElementById('waterMl').textContent=ml;
-  document.getElementById('waterGoalLabel').textContent=goal;
-  document.getElementById('waterLeft').textContent=Math.max(0,goal-ml);
-  document.getElementById('waterFill').style.width=(goal>0?Math.min(100,Math.round(ml/goal*100)):0)+'%';
-  const rEl=document.getElementById('waterRec');
-  if(rEl) rEl.innerHTML=`Recommended: <b>~${goal} ml/day</b> (≈35 ml per kg). Add more on training days and hot weather.`;
-}
-function addWater(ml){ const tk=todayKey(); S.water[tk]=Math.max(0,(S.water[tk]||0)+ml); save(); renderWater(); }
 
 /* ============ DELOAD ============ */
 function weeksSinceDeload(){ const start=new Date((S.deloadStart||todayKey())+'T00:00:00'); return Math.floor((new Date()-start)/(7*864e5)); }
@@ -1398,7 +1283,6 @@ function normalize(){
 function init(){
   normalize();
   renderProfile(); renderSetup(); renderWeek();
-  renderProtein(); renderCreatine(); renderVitamins(); renderWater();
   renderDeload(); renderProgress(); renderCheckin();
   showTab(S.tab||'workout');
 }
